@@ -38,47 +38,47 @@ import java.awt.Graphics;
 import javax.swing.JPanel;
 
 /**
- * GlassPane component which can be set on toplevel
- * containers to makes those containers "busy" be disabling input.
- *
+ * GlassPane component which can be set on toplevel containers to makes those
+ * containers "busy" be disabling input.
+ * 
  * Example usage:
- * <pre><code>
+ * 
+ * <pre>
+ * &lt;code&gt;
  *    // Install glasspane
  *    frame.setGlassPane(new BusyGlass());
- *
  *    // Make frame busy
  *    frame.getGlassPane().setVisible(true);
- * </code></pre>
- *
- * Caution: A well-written client should rarely need to make
- * a window "busy" because the app should be as responsive as possible;
- * long-winded operations should be off-loaded to non-GUI threads
- * whenever possible.
- *
+ * &lt;/code&gt;
+ * </pre>
+ * 
+ * Caution: A well-written client should rarely need to make a window "busy"
+ * because the app should be as responsive as possible; long-winded operations
+ * should be off-loaded to non-GUI threads whenever possible.
+ * 
  * @author aim
  */
-//<snip>Make toplevel "busy"
+// <snip>Make toplevel "busy"
 public class BusyGlass extends JPanel {
 
-    /**
-     * Create GlassPane component to block input on toplevel
-     */
-    public BusyGlass() {
-        setLayout(new BorderLayout());
-        setVisible(false); //initially invisible
-        setOpaque(false);
-        setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-    }
+	/**
+	 * Create GlassPane component to block input on toplevel
+	 */
+	public BusyGlass() {
+		setLayout(new BorderLayout());
+		setVisible(false); // initially invisible
+		setOpaque(false);
+		setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+	}
 
-    protected void paintComponent(Graphics g) {
-        // Render partially opaque to 'veil' the frame's contents so
-        // that the user has visual feedback that the components
-        // arn't responsive.
-        Color bgColor = getBackground();
-        g.setColor(new Color(bgColor.getRed(),
-                bgColor.getGreen(),
-                bgColor.getBlue(), 150));
-        g.fillRect(0, 0, getWidth(), getHeight());
-    }
+	protected void paintComponent(Graphics g) {
+		// Render partially opaque to 'veil' the frame's contents so
+		// that the user has visual feedback that the components
+		// arn't responsive.
+		Color bgColor = getBackground();
+		g.setColor(new Color(bgColor.getRed(), bgColor.getGreen(), bgColor
+				.getBlue(), 150));
+		g.fillRect(0, 0, getWidth(), getHeight());
+	}
 }
-//</snip>
+// </snip>
