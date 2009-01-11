@@ -1,4 +1,5 @@
 package dolmisani.toys.demos.hellow;
+
 /*
  * Copyright 2007-2008 Sun Microsystems, Inc.  All Rights Reserved.
  *
@@ -30,224 +31,79 @@ package dolmisani.toys.demos.hellow;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Dimension;
 import java.awt.EventQueue;
-import java.awt.Image;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.net.URL;
-import javax.imageio.ImageIO;
-import javax.swing.*;
+
+import javax.swing.Box;
+import javax.swing.JComponent;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 
 import com.sun.swingset3.DemoProperties;
-import com.sun.swingset3.demos.DemoUtilities;
-import com.sun.swingset3.demos.frame.BusyGlass;
 
 /**
- * Demo for Swing's JFrame toplevel component.
- *
+ * Demo for Swing's JFrame top-level component.
+ * 
  * @author aim
  */
-@DemoProperties(
-        value = "HelloWorld Demo",
-        category = "Hello World",
-        description = "Demonstrates JFrame, Swing's top-level primary window container.",
-        sourceFiles = {
-                "com/sun/swingset3/demos/frame/BusyGlass.java",
-                "com/sun/swingset3/demos/frame/FrameDemo.java",
-                "com/sun/swingset3/demos/DemoUtilities.java",
-                "com/sun/swingset3/demos/frame/resources/FrameDemo.html",
-                "com/sun/swingset3/demos/frame/resources/images/FrameDemo.gif"
-                }
-)
+@DemoProperties(value = "HelloWorld Demo", category = "Hello World", description = "Demonstrates JFrame, Swing's top-level primary window container.", sourceFiles = {
+		"com/sun/swingset3/demos/frame/BusyGlass.java",
+		"com/sun/swingset3/demos/frame/FrameDemo.java",
+		"com/sun/swingset3/demos/DemoUtilities.java",
+		"com/sun/swingset3/demos/frame/resources/FrameDemo.html",
+		"com/sun/swingset3/demos/frame/resources/images/FrameDemo.gif" })
 public class HelloWorldDemo extends JPanel {
-    //<snip>Ensure system menubar is used on Mac OSX
-    static {
-        // Property must be set *early* due to Apple Bug#3909714
-        // ignored on other platforms
-        if (System.getProperty("os.name").equals("Mac OS X")) {
-            System.setProperty("apple.laf.useScreenMenuBar", "true");
-        }
-    }
-    //</snip>
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 755456253118253848L;
 
-    // Toplevel frame component    
-    private JFrame frame;
+	static {
+		// Property must be set *early* due to Apple Bug#3909714
+		// ignored on other platforms
+		if (System.getProperty("os.name").equals("Mac OS X")) {
+			System.setProperty("apple.laf.useScreenMenuBar", "true");
+		}
+	}
 
-    private JComponent frameSpaceholder;
+	public HelloWorldDemo() {
+		initComponents();
+	}
 
-    public HelloWorldDemo() {
-        initComponents();
-    }
+	protected void initComponents() {
 
-    protected void initComponents() {
-        frame = createFrame();
+		setLayout(new BorderLayout());
+		add(createControlPanel(), BorderLayout.WEST);
+	}
 
-        setLayout(new BorderLayout());
-        add(createControlPanel(), BorderLayout.WEST);
-        frameSpaceholder = createFrameSpaceholder(frame);
-        add(frameSpaceholder, BorderLayout.CENTER);
-    }
+	protected JComponent createControlPanel() {
+		Box controlPanel = Box.createVerticalBox();
+		controlPanel.setBorder(new EmptyBorder(8, 8, 8, 8));
 
-    protected JComponent createControlPanel() {
-        Box controlPanel = Box.createVerticalBox();
-        controlPanel.setBorder(new EmptyBorder(8, 8, 8, 8));
+		JLabel helloworldLabel = new JLabel("HelloWorld!!");
+		controlPanel.add(helloworldLabel);
+		return controlPanel;
+	}
 
-        // Create button to control visibility of frame
-        JButton showButton = new JButton("Show JFrame...");
-        showButton.addActionListener(new ShowActionListener());
-        controlPanel.add(showButton);
+	public void start() {
+	}
 
-        // Create checkbox to control busy state of frame
-        JCheckBox busyCheckBox = new JCheckBox("Frame busy");
-        busyCheckBox.setSelected(false);
-        busyCheckBox.addChangeListener(new BusyChangeListener());
-        controlPanel.add(busyCheckBox);
+	public void stop() {
+	}
 
-        return controlPanel;
-    }
-
-    private static JComponent createFrameSpaceholder(JFrame frame) {
-        JPanel framePlaceholder = new JPanel();
-        Dimension prefSize = frame.getPreferredSize();
-        prefSize.width += 12;
-        prefSize.height += 12;
-        framePlaceholder.setPreferredSize(prefSize);
-
-        return framePlaceholder;
-    }
-
-    private static JFrame createFrame() {
-
-        //<snip>Create frame and set simple properties
-        JFrame frame = new JFrame("Demo JFrame");
-        frame.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
-        //</snip>
-
-        //<snip>Set Minimized/titlebar icon Image
-        //Note: How the image is used is platform-dependent
-        Image iconImage = null;
-        try {
-            // todo: swingingduke.gif doesn't exist 
-            URL imageURL = HelloWorldDemo.class.getResource("resources/images/swingingduke.gif");
-            iconImage = ImageIO.read(imageURL);
-        } catch (Exception e) {
-            // handle image IO exception
-        }
-        frame.setIconImage(iconImage);
-        //</snip>
-
-        //<snip>Make toplevel "busy"
-        // busy glasspane is initially invisible
-        frame.setGlassPane(new BusyGlass());
-        //</snip>
-
-        //<snip>Add a menubar
-        JMenuBar menubar = new JMenuBar();
-        frame.setJMenuBar(menubar);
-        JMenu menu = new JMenu("File");
-        menubar.add(menu);
-        menu.add("Open");
-        menu.add("Save");
-        //</snip>
-
-        //<snip>Add a horizontal toolbar
-        JToolBar toolbar = new JToolBar();
-        frame.add(toolbar, BorderLayout.NORTH);
-        toolbar.add(new JButton("Toolbar Button"));
-        //</snip>
-
-        //<snip>Add the content area
-        JLabel label = new JLabel("I'm content but a little blue.");
-        label.setHorizontalAlignment(JLabel.CENTER);
-        label.setPreferredSize(new Dimension(300, 160));
-        label.setBackground(new Color(197, 216, 236));
-        label.setOpaque(true); // labels non-opaque by default
-        frame.add(label);
-        //snip
-
-        //<snip>Add a statusbar
-        JLabel statusLabel = new JLabel("I show status.");
-        statusLabel.setBorder(new EmptyBorder(4, 4, 4, 4));
-        statusLabel.setHorizontalAlignment(JLabel.LEADING);
-        frame.add(statusLabel, BorderLayout.SOUTH);
-        //</snip>
-
-        //<snip>Initialize frame's size to fit it's content
-        frame.pack();
-        //</snip>
-
-        return frame;
-    }
-
-    public void start() {
-        DemoUtilities.setToplevelLocation(frame, frameSpaceholder, SwingConstants.CENTER);
-        showFrame();
-    }
-
-    public void stop() {
-        //<snip>Hide frame
-        frame.setVisible(false);
-        //</snip>
-    }
-
-    public void showFrame() {
-        //<snip>Show frame
-        // if frame already visible, then bring to the front
-        if (frame.isShowing()) {
-            frame.toFront();
-        } else {
-            frame.setVisible(true);
-        }
-        //</snip>
-    }
-
-    //<snip>Make toplevel "busy"  
-    public void setFrameBusy(boolean busy) {
-        frame.getGlassPane().setVisible(busy);
-        // Must explicitly disable the menubar because on OSX it will be
-        // in the system menubar and not covered by the glasspane
-        frame.getJMenuBar().setEnabled(!busy);
-    }
-
-    public boolean isFrameBusy() {
-        return frame.getGlassPane().isVisible();
-    }
-    //</snip
-
-    // remind(aim): replace with Beans binding
-
-    private class ShowActionListener implements ActionListener {
-        public void actionPerformed(ActionEvent actionEvent) {
-            showFrame();
-        }
-    }
-
-    private class BusyChangeListener implements ChangeListener {
-        public void stateChanged(ChangeEvent changeEvent) {
-            JCheckBox busyCheckBox = (JCheckBox) changeEvent.getSource();
-            setFrameBusy(busyCheckBox.isSelected());
-            showFrame(); // bring frame back to front for demo purposes
-        }
-    }
-
-    public static void main(String args[]) {
-        EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                JFrame frame = new JFrame();
-                HelloWorldDemo demo = new HelloWorldDemo();
-                frame.add(demo);
-                frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-                frame.pack();
-                frame.setVisible(true);
-                demo.start();
-            }
-        });
-    }
+	public static void main(String args[]) {
+		EventQueue.invokeLater(new Runnable() {
+			public void run() {
+				JFrame frame = new JFrame();
+				HelloWorldDemo demo = new HelloWorldDemo();
+				frame.add(demo);
+				frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+				frame.pack();
+				frame.setVisible(true);
+				demo.start();
+			}
+		});
+	}
 }
