@@ -1,3 +1,0 @@
-
-
-[ ] remove dependency on javaws.jar as fixed 'C:/.....' path
