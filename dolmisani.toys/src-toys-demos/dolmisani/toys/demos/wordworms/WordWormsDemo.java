@@ -2,6 +2,7 @@ package dolmisani.toys.demos.wordworms;
 
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.EventQueue;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -17,13 +18,18 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.border.EmptyBorder;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 
 import com.sun.swingset3.DemoProperties;
 
-import dolmisani.toys.wordworms.CimiceMaiofaga;
-import dolmisani.toys.wordworms.Farfalo;
-import dolmisani.toys.wordworms.TermiteDiDublino;
 import dolmisani.toys.wordworms.WordWorm;
+import dolmisani.toys.wordworms.customs.CalabroneCoatto;
+import dolmisani.toys.wordworms.originals.CimiceMaiofaga;
+import dolmisani.toys.wordworms.originals.Farfalo;
+import dolmisani.toys.wordworms.originals.MoscerinoApocopio;
+import dolmisani.toys.wordworms.originals.RagnoUniverbo;
+import dolmisani.toys.wordworms.originals.TermiteDiDublino;
 
 /**
  * Demo for Swing's JFrame top-level component.
@@ -38,6 +44,11 @@ import dolmisani.toys.wordworms.WordWorm;
 		"com/sun/swingset3/demos/frame/resources/images/FrameDemo.gif" })
 public class WordWormsDemo extends JPanel {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -5610457825299331903L;
+
 	static {
 		// Property must be set *early* due to Apple Bug#3909714
 		// ignored on other platforms
@@ -49,12 +60,15 @@ public class WordWormsDemo extends JPanel {
 	private static WordWorm[] WORMS = {
 		new Farfalo(),
 		new TermiteDiDublino(),
-		new CimiceMaiofaga()
+		new CimiceMaiofaga(),
+		new RagnoUniverbo(),
+		new MoscerinoApocopio(),
+		new CalabroneCoatto()
 	};
 	
 	private JTextArea sourceTextArea;
 	private JTextArea targetTextArea;
-	
+	private JComboBox wormsList;	
 	
 	
 	public WordWormsDemo() {
@@ -64,7 +78,7 @@ public class WordWormsDemo extends JPanel {
 	protected void initComponents() {
 
 		setLayout(new BorderLayout());
-		add(createControlPanel(), BorderLayout.WEST);
+		add(createControlPanel(), BorderLayout.NORTH);
 		add(createDataPanel(), BorderLayout.CENTER);
 	}
 
@@ -76,37 +90,58 @@ public class WordWormsDemo extends JPanel {
 		dataPanel.add(new JLabel("Source:", JLabel.LEFT));
 		
 		sourceTextArea = new JTextArea(12, 40);
+		sourceTextArea.setLineWrap(true);
+		sourceTextArea.getDocument().addDocumentListener(new DocumentListener() {
+
+			@Override
+			public void changedUpdate(DocumentEvent e) {
+			
+				textUpdate();				
+			}
+
+			@Override
+			public void insertUpdate(DocumentEvent e) {
+				
+				textUpdate();
+			}
+
+			@Override
+			public void removeUpdate(DocumentEvent e) {
+			
+				textUpdate();				
+			}
+			
+		});
 		dataPanel.add(new JScrollPane(sourceTextArea));
 
-		dataPanel.add(new JLabel("Target:"));
+		JLabel targetLabel = new JLabel("Target:");
+		dataPanel.add(targetLabel);
 		
 		targetTextArea = new JTextArea(12, 40);
 		targetTextArea.setEditable(false);
+		targetTextArea.setLineWrap(true);
 		dataPanel.add(new JScrollPane(targetTextArea));
 
 		return dataPanel;
 	}
 
 	protected JComponent createControlPanel() {
-		Box controlPanel = Box.createVerticalBox();
+		Box controlPanel = Box.createHorizontalBox();
 		controlPanel.setBorder(new EmptyBorder(8, 8, 8, 8));
 
-		final JComboBox wormsList = new JComboBox(WORMS);
-		controlPanel.add(wormsList);
-		
-		final JButton feedButton = new JButton("Feed!!");
-		feedButton.addActionListener(new ActionListener() {
+		wormsList = new JComboBox(WORMS);
+		wormsList.addActionListener(new ActionListener() {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				
-				String text = sourceTextArea.getText();
-				text = ((WordWorm)(wormsList.getSelectedItem())).eat(text);
-				targetTextArea.setText(text);				
-			}									
+				textUpdate();				
+			}			
 		});
-		controlPanel.add(feedButton);
-
+		controlPanel.add(wormsList);
+		
+		//controlPanel.add(Box.createGlue());
+		
 		return controlPanel;
 	}
 
@@ -114,6 +149,12 @@ public class WordWormsDemo extends JPanel {
 	}
 
 	public void stop() {
+	}
+	
+	private void textUpdate() {
+		String text = sourceTextArea.getText();
+		text = ((WordWorm)(wormsList.getSelectedItem())).eat(text);
+		targetTextArea.setText(text);
 	}
 
 	public static void main(String args[]) {
