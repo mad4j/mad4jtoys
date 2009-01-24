@@ -21,15 +21,18 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
+import com.sun.org.apache.bcel.internal.generic.NEW;
 import com.sun.swingset3.DemoProperties;
 
 import dolmisani.toys.wordworms.WordWorm;
+import dolmisani.toys.wordworms.customs.BacoDiDaniele;
 import dolmisani.toys.wordworms.customs.CalabroneCoatto;
 import dolmisani.toys.wordworms.originals.CimiceMaiofaga;
 import dolmisani.toys.wordworms.originals.Farfalo;
 import dolmisani.toys.wordworms.originals.MoscerinoApocopio;
 import dolmisani.toys.wordworms.originals.RagnoUniverbo;
 import dolmisani.toys.wordworms.originals.TermiteDiDublino;
+import dolmisani.toys.wordworms.originals.VermeDisicio;
 
 /**
  * Demo for Swing's JFrame top-level component.
@@ -63,7 +66,9 @@ public class WordWormsDemo extends JPanel {
 		new CimiceMaiofaga(),
 		new RagnoUniverbo(),
 		new MoscerinoApocopio(),
-		new CalabroneCoatto()
+		new BacoDiDaniele(),
+		new CalabroneCoatto(),
+		new VermeDisicio()
 	};
 	
 	private JTextArea sourceTextArea;
