@@ -5,29 +5,35 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Polygon;
 import java.awt.image.BufferedImage;
-import java.util.StringTokenizer;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * This class constructs a new circuit, and makes a representation of it in a
  * BufferedImage
  */
 public class Circuit {
-	
+
 	int[][] circ; // Storage array for circuit-points
-	int sizex, sizey; // Horizontal and vertical size of the circuit
+	int maxCols, maxRows; // Horizontal and vertical size of the circuit
+
 	public int starty, startx1, startx2; // Location of the start/finish line
-	int checkpoints; // Number of checkpoints; this is used to render the
-						// circuit
+
 	Graphics2D gr; // Used to edit the image
 	BufferedImage image;// Graphical representation of the circuit
 	GraphRace ppr; // Parental class
-	Polygon curbout, curbin; // Inner field and outter field
-	public boolean correct = false;
+	
+	// Inner field and outer field
+	Polygon curbout;
+	Polygon curbin; 
 
-	int[] chkx, chky; // Stores the checkpoints
+	
+
+	int checkpoints; // Number of checkpoints; this is used to render the
+						// circuit
 
 	int hsize, vsize, gridsize; // Actual size of the circuit on the screen and
-								// the size of the grid
+	// the size of the grid
 	final int MG = 5; // Margin around the circuit
 
 	/**
@@ -43,38 +49,40 @@ public class Circuit {
 	 *            Parental game object
 	 */
 	public Circuit(int sx, int sy, int chk, GraphRace p) {
-		sizex = sx + 2 * MG;
-		sizey = sy + 2 * MG;
+		
+		maxCols = sx + 2 * MG;
+		maxRows = sy + 2 * MG;
 		checkpoints = chk;
 		ppr = p;
 		// init();
 	}
 
 	/**
-	 * Initialises a new circuit
+	 * Initializes a new circuit
 	 */
 	public void init() {
-		circ = new int[sizex][sizey];
-		chkx = new int[checkpoints + MG];
-		chky = new int[checkpoints + MG];
-		trace(); // Find some random checkpoints, and render a circuit
+
+		circ = new int[maxCols][maxRows];
+
+		generate(); // Find some random checkpoints, and render a circuit
+
 		setstart(); // Find start/finishline
 
 		gridsize = ppr.getgame().getgridsize();
 		dographics();
-		correct = true;
 	}
 
 	/**
 	 * Draws the circuit
 	 */
 	public void dographics() {
-		hsize = sizex * gridsize;
-		vsize = sizey * gridsize;
+		hsize = maxCols * gridsize;
+		vsize = maxRows * gridsize;
 
 		image = new BufferedImage(hsize, vsize, BufferedImage.TYPE_INT_RGB);
 		gr = image.createGraphics();
-		teken_grid(); // Draw the circuit-points
+
+		drawGrid(); // Draw the circuit-points
 		curbout = new Polygon();
 		curbin = new Polygon();
 		omtrek(); // Draw the curbstones
@@ -95,7 +103,7 @@ public class Circuit {
 	 * @return 1 or higher if the coordinate contains tarmac
 	 */
 	public int terrain(int x, int y) {
-		if ((x < 0) || (x >= sizex) || (y < 0) || (y >= sizey))
+		if ((x < 0) || (x >= maxCols) || (y < 0) || (y >= maxRows))
 			return -1;
 		return circ[x][y];
 	}
@@ -103,15 +111,15 @@ public class Circuit {
 	/*
 	 * @return the horizontal size of the circuit
 	 */
-	public int getsizex() {
-		return sizex;
+	public int getWidth() {
+		return maxCols;
 	}
 
 	/*
 	 * @return the vertical size of the circuit
 	 */
-	public int getsizey() {
-		return sizey;
+	public int getHeight() {
+		return maxRows;
 	}
 
 	/*
@@ -135,42 +143,6 @@ public class Circuit {
 		return startx2;
 	}
 
-	/**
-	 * @return the String version of the circuit, for uploading to network
-	 */
-	public String download() {
-		String s = sizex + "," + sizey + ",";
-		for (int y = 0; y < sizey; y++)
-			for (int x = 0; x < sizex; x++)
-				s += circ[x][y];
-		return s;
-	}
-
-	/**
-	 * Sets the circuit to the given String.
-	 */
-	public void upload(String s) {
-		correct = false;
-		StringTokenizer st = new StringTokenizer(s, ",");
-		String n = "";
-		int pos;
-		try {
-			sizex = Integer.parseInt(st.nextToken());
-			sizey = Integer.parseInt(st.nextToken());
-			n = st.nextToken();
-			circ = new int[sizex][sizey];
-			for (int y = 0; y < sizey; y++)
-				for (int x = 0; x < sizex; x++) {
-					pos = y * sizex + x;
-					circ[x][y] = Integer.parseInt(n.substring(pos, pos + 1));
-				}
-			correct = true;
-			setstart();
-			dographics();
-		} catch (Exception e) {
-		}
-	}
-
 	/*--------------------------------------------------------------*/
 	/*-------------- These functions render the circuit ------------*/
 
@@ -180,100 +152,72 @@ public class Circuit {
 	 * The circuit always has a width of three, but because of overlapping it
 	 * has sometimes more.
 	 */
-	void trace() {
-		int i = 0, j, k, x, y, rx = (int) ((sizex - 2 * MG) / 2), // Radius X
-		ry = (int) ((sizey - 2 * MG) / 2); // Radius Y
-		double b, rc;
+	public void generate() {
+		
+		int xRadius = (maxCols - 2*MG) / 2;
+		int yRadius = (maxRows - 2*MG) / 2;
 
-		for (b = 0; b <= 2 * Math.PI; b += (2 * Math.PI) / checkpoints) // Generate
-																		// random
-																		// marks.
-		{
-			chkx[i] = (int) ((Math.random() * (.5 * rx) + .5 * rx)
-					* Math.cos(b) + rx);
-			chky[i] = (int) ((Math.random() * (.5 * ry) + .5 * ry)
-					* Math.sin(b) + ry);
-			i++;
+		List<Position> checkpointList = new ArrayList<Position>(checkpoints);
+		for (int i = 0; i < checkpoints; i++) {
+
+			double angle = i * ((2.0 * Math.PI) / checkpoints);
+
+			//int cx = MG + (int)(0.5*xRadius*Math.cos(angle)*(Math.random()+1))+xRadius;
+			//int cy = MG + (int)(0.5*xRadius*Math.sin(angle)*(Math.random()+1))+xRadius;
+			
+			int cx = MG + (int) ((Math.random() * (.5 * xRadius) + .5 * xRadius)
+					* Math.cos(angle) + xRadius);
+			int cy = MG + (int) ((Math.random() * (.5 * yRadius) + .5 * yRadius)
+					* Math.sin(angle) + yRadius);
+			
+			checkpointList.add(new Position(cx, cy));
+		}		
+		
+		for (int i = 0; i < checkpointList.size(); i++) {
+			
+			trace(checkpointList.get(i), checkpointList.get((i+1)%checkpoints));
 		}
-
-		for (i = 0; i < 5; i++) // Save extra 5 marks, for completing the circle
-		{
-			chkx[i + checkpoints] = chkx[i];
-			chky[i + checkpoints] = chky[i];
-		}
-
-		for (i = 0; i < checkpoints; i++) {
-			k = i + 1;
-			if (i == checkpoints - 1)
-				k = 0; // Draw a line between the first and last mark.
-
-			rc = ((float) (chky[k] - chky[i]) / (float) (chkx[k] - chkx[i]));
-
-			if (rc >= 1 || rc < -1) // Vertical itereration
-			{
-				rc = 1 / rc;
-				if (chky[i] < chky[k])
-					for (j = 0; j <= (chky[k] - chky[i]); j++)
-						circ[chkx[i] + (int) (rc * j) + MG][chky[i] + j + MG] = 1;
-
-				if (chky[i] >= chky[k])
-					for (j = 0; j >= (chky[k] - chky[i]); j--)
-						circ[chkx[i] + (int) (rc * j) + MG][chky[i] + j + MG] = 1;
-			} else if (chkx[i] == chkx[k]) // Vertical exception: rc==infinite.
-			{
-				if (chky[i] < chky[k])
-					for (j = 0; j <= (chky[k] - chky[i]); j++)
-						circ[chkx[i] + MG][chky[i] + j + MG] = 1;
-				if (chky[i] >= chky[k])
-					for (j = 0; j >= (chky[k] - chky[i]); j--)
-						circ[chkx[i] + MG][chky[i] + j + MG] = 1;
-			} else // Horizontal itereration.
-			{
-				if (chkx[k] > chkx[i])
-					for (j = 0; j <= (chkx[k] - chkx[i]); j++)
-						circ[chkx[i] + j + MG][chky[i] + (int) (rc * j) + MG] = 1;
-
-				if (chkx[k] <= chkx[i])
-					for (j = 0; j >= (chkx[k] - chkx[i]); j--)
-						circ[chkx[i] + j + MG][chky[i] + (int) (rc * j) + MG] = 1;
-			}
-		}
-
-		for (x = 1; x < sizex; x++)
-			// Expand circuit to points around the route
-			for (y = 1; y < sizey; y++)
-				if (circ[x][y] == 1) {
-					if (circ[x + 1][y] != 1)
-						circ[x + 1][y] = 2;
-					if (circ[x - 1][y] != 1)
-						circ[x - 1][y] = 2;
-					if (circ[x][y + 1] != 1)
-						circ[x][y + 1] = 2;
-					if (circ[x][y - 1] != 1)
-						circ[x][y - 1] = 2;
-					if (circ[x + 1][y + 1] != 1)
-						circ[x + 1][y + 1] = 2;
-					if (circ[x - 1][y + 1] != 1)
-						circ[x - 1][y + 1] = 2;
-					if (circ[x + 1][y - 1] != 1)
-						circ[x + 1][y - 1] = 2;
-					if (circ[x - 1][y - 1] != 1)
-						circ[x - 1][y - 1] = 2;
-				}
-		for (x = 0; x < sizex; x++)
-			// Store the circuit in the array
-			for (y = 0; y < sizey; y++)
-				if (circ[x][y] == 2)
-					circ[x][y] = 1;
-
 	}
 
+	
+	private void dig(Position p) {
+	
+		int x = p.getX();
+		int y = p.getY();
+		
+		circ[x  ][y  ] = 1;
+		
+		circ[x+1][y  ] = 1;
+		circ[x  ][y+1] = 1;
+		circ[x+1][y+1] = 1;
+		circ[x-1][y  ] = 1;
+		circ[x  ][y-1] = 1;
+		circ[x-1][y-1] = 1;
+		circ[x+1][y-1] = 1;
+		circ[x-1][y+1] = 1;
+	}
+	
+	private void trace(Position p1, Position p2) {
+		
+		dig(p1);
+		dig(p2);
+		
+		if(p1.isNear(p2)) {
+			return;
+		}
+				
+		Position middle = new Position((p1.getX()+p2.getX())/2, (p1.getY()+p2.getY())/2);
+		
+		trace(p1, middle);
+		trace(middle, p2);		
+	}
+	
 	/**
 	 * This function calculates the start/finish coordinates
 	 */
 	void setstart() {
-		starty = (int) getsizey() / 2;
-		int x = (int) getsizex() / 2;
+		starty = (int) getHeight() / 2;
+		int x = (int) getWidth() / 2;
 
 		while (terrain(x++, starty) == 0)
 			;
@@ -290,38 +234,29 @@ public class Circuit {
 	 * Paint the buffered image onto the screen
 	 */
 	public void paint(Graphics g) {
-		g.drawImage(image, 0, 0, ppr);
+		g.drawImage(image, 0, 0, null);
 	}
 
 	/**
 	 * Draws the circuit-grid into the Graphics-object.
 	 */
-	void teken_grid() {
-		int a, b, x, y;
-		Color c = new Color(70, 70, 70);
-		for (x = 0; x < sizex; x++)
+	void drawGrid() {
+		
+		for (int x = 0; x < maxCols; x++)
 			// Draw vertical gridlines
-			line(x, 0, x, sizey, c);
-		for (y = 0; y < sizey; y++)
+			line(x, 0, x, maxRows, Color.darkGray);
+		for (int y = 0; y < maxRows; y++)
 			// Draw horizontal gridlines
-			line(0, y, sizex, y, c);
-		c = new Color(60, 60, 60); // Draw cool gridlines
-		for (y = 0; y < sizey; y++)
-			line(0, y, y, sizex, c);
-		for (y = 0; y < sizey; y++)
-			line(y, 0, sizex, y, c);
+			line(0, y, maxCols, y, Color.darkGray);
 
-		for (x = 0; x <= sizex; x++)
-			// Draw the gridpoints
-			for (y = 0; y <= sizey; y++)
-				pixel(x, y, Color.green);
-
-		for (x = 0; x < sizex; x++)
-			for (y = 0; y < sizey; y++) {
+		for (int x = 0; x < maxCols; x++) {
+			for (int y = 0; y < maxRows; y++) {
+				
 				if (terrain(x, y) != 0) {
 					pixel(x, y, Color.white);
 				}
 			}
+		}
 	}
 
 	int x, y, vx, vy, x_oud, y_oud, vx_oud, vy_oud, curbcount;
@@ -331,13 +266,13 @@ public class Circuit {
 	 * Call this function to Draw the curb-stones into the Buffered image.
 	 */
 	void omtrek() {
-		curbcount = 2 * sizex + 2 * sizey; // Maximum number of curbstones
+		curbcount = 2 * maxCols + 2 * maxRows; // Maximum number of curbstones
 		x = 0;
 		y = 0;
 
 		do // Search first white dot for the outer curb-stones
 		{
-			if (x > sizex) {
+			if (x > maxCols) {
 				x = 0;
 				y++;
 			}
@@ -348,8 +283,8 @@ public class Circuit {
 		vy = 0;
 		do_omtrek(curbout, curbcount); // Calculate the outer curbstones
 
-		x = (int) (MG + sizex) / 2;
-		y = (int) (MG + sizey) / 2;
+		x = (int) (MG + maxCols) / 2;
+		y = (int) (MG + maxRows) / 2;
 		do {
 			x++; // Search first white dot for the inner curb-stones
 		} while (terrain(x, y) <= 0);
@@ -554,38 +489,4 @@ public class Circuit {
 				(startx2 - 1) * gridsize, starty * gridsize + 2);
 	}
 
-	/**
-	 * Draw a filled polygon
-	 */
-	void fill(Polygon pol, Color c) {
-		gr.setColor(c);
-		gr.fillPolygon(pol);
-	}
-
-	/**
-	 * Draw a filled circle
-	 */
-	void fillcircle(int x, int y, Color c) {
-		gr.setColor(c);
-		int s = (int) gridsize;
-		if ((x < 0) || (y < 0))
-			return;
-		gr.fillOval(x * gridsize - s, y * gridsize - s, 2 * s, 2 * s);
-	}
-
-	/*********************************************************
-	 *For testing purposes only:
-	 */
-	public Circuit(GraphRace p) {
-		ppr = p;
-	}
-
-	public static void main(String[] ps) {
-		GraphRace p = new GraphRace();
-		Circuit c = new Circuit(p);
-		String t = "6,3,011010150011011100";
-		System.out.println(t);
-		c.upload(t);
-		System.out.println(c.download());
-	}
 }
