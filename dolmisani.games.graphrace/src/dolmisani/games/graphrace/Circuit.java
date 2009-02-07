@@ -14,27 +14,28 @@ import java.util.List;
  */
 public class Circuit {
 
-	int[][] circ; // Storage array for circuit-points
-	int maxCols, maxRows; // Horizontal and vertical size of the circuit
+	private int[][] circ; // Storage array for circuit-points
+	private int maxCols, maxRows; // Horizontal and vertical size of the circuit
 
-	public int starty, startx1, startx2; // Location of the start/finish line
+	// Location of the start/finish line
+	private FinishLine finishLine;
 
-	Graphics2D gr; // Used to edit the image
-	BufferedImage image;// Graphical representation of the circuit
-	GraphRace ppr; // Parental class
+	private Graphics2D gr; // Used to edit the image
+	private BufferedImage image;// Graphical representation of the circuit
+	private GraphRace ppr; // Parental class
 	
 	// Inner field and outer field
-	Polygon curbout;
-	Polygon curbin; 
+	private Polygon curbout;
+	private Polygon curbin; 
 
 	
 
-	int checkpoints; // Number of checkpoints; this is used to render the
+	private int checkpoints; // Number of checkpoints; this is used to render the
 						// circuit
 
-	int hsize, vsize, gridsize; // Actual size of the circuit on the screen and
+	private int hsize, vsize, gridsize; // Actual size of the circuit on the screen and
 	// the size of the grid
-	final int MG = 5; // Margin around the circuit
+	private final int MG = 5; // Margin around the circuit
 
 	/**
 	 * Constructs a new circuit
@@ -66,7 +67,9 @@ public class Circuit {
 
 		generate(); // Find some random checkpoints, and render a circuit
 
-		setstart(); // Find start/finishline
+		finishLine = FinishLine.create(this);
+		
+		//setstart(); // Find start/finishline
 
 		gridsize = ppr.getgame().getgridsize();
 		dographics();
@@ -108,10 +111,16 @@ public class Circuit {
 		return circ[x][y];
 	}
 
+	public int terrain(Position p) {
+		
+		return terrain(p.getX(), p.getY());
+	}
+	
 	/*
 	 * @return the horizontal size of the circuit
 	 */
 	public int getWidth() {
+		
 		return maxCols;
 	}
 
@@ -119,29 +128,15 @@ public class Circuit {
 	 * @return the vertical size of the circuit
 	 */
 	public int getHeight() {
+		
 		return maxRows;
 	}
 
-	/*
-	 * @return the vertical coordinate of the start/finish
-	 */
-	public int getstarty() {
-		return starty;
+	public FinishLine getFinishLine() {
+		
+		return finishLine;
 	}
-
-	/*
-	 * @return the 1st horizontal coordinate of the start/finish
-	 */
-	public int getstartx1() {
-		return startx1;
-	}
-
-	/*
-	 * @return the 2nd horizontal coordinate of the start/finish
-	 */
-	public int getstartx2() {
-		return startx2;
-	}
+	
 
 	/*--------------------------------------------------------------*/
 	/*-------------- These functions render the circuit ------------*/
@@ -212,20 +207,6 @@ public class Circuit {
 		trace(middle, p2);		
 	}
 	
-	/**
-	 * This function calculates the start/finish coordinates
-	 */
-	void setstart() {
-		starty = (int) getHeight() / 2;
-		int x = (int) getWidth() / 2;
-
-		while (terrain(x++, starty) == 0)
-			;
-		startx1 = x - 1;
-		while (terrain(x++, starty) != 0)
-			;
-		startx2 = x;
-	}
 
 	/*--------------------------------------------------------------*/
 	/*-----From here all functions apply to the graphical image.----*/
@@ -475,18 +456,20 @@ public class Circuit {
 	 *Little function for drawing the start-finish line
 	 */
 	public void drawstart() {
+		
 		gr.setColor(Color.white);
-		for (int i = 0; i < startx2 - startx1; i += 2)
-			gr.drawLine((startx1 + i - 1) * gridsize, starty * gridsize,
-					(startx1 + i) * gridsize, starty * gridsize);
-		for (int i = 1; i < startx2 - startx1; i += 2)
-			gr.drawLine((startx1 + i - 1) * gridsize, starty * gridsize + 1,
-					(startx1 + i) * gridsize, starty * gridsize + 1);
-		gr.setColor(Color.gray);
-		gr.drawLine((startx1 - 1) * gridsize, starty * gridsize - 1,
-				(startx2 - 1) * gridsize, starty * gridsize - 1);
-		gr.drawLine((startx1 - 1) * gridsize, starty * gridsize + 2,
-				(startx2 - 1) * gridsize, starty * gridsize + 2);
-	}
-
+		for (int i = 0; i < finishLine.getX2() - finishLine.getX1(); i += 2)
+			gr.drawLine((finishLine.getX1() + i - 1) * gridsize, finishLine.getY() * gridsize,
+					(finishLine.getX1() + i) * gridsize, finishLine.getY() * gridsize);
+		for (int i = 1; i < finishLine.getX2() - finishLine.getX1(); i += 2)
+			gr.drawLine((finishLine.getX1() + i - 1) * gridsize, finishLine.getY() * gridsize + 1,
+					(finishLine.getX1() + i) * gridsize, finishLine.getY() * gridsize + 1);
+		
+		gr.setColor(Color.gray);		
+		gr.drawLine((finishLine.getX1() - 1) * gridsize, finishLine.getY() * gridsize - 1,
+				(finishLine.getX2() - 1) * gridsize, finishLine.getY() * gridsize - 1);
+		gr.drawLine((finishLine.getX1() - 1) * gridsize, finishLine.getY() * gridsize + 2,
+				(finishLine.getX2() - 1) * gridsize, finishLine.getY() * gridsize + 2);
+	}	
+	
 }

@@ -37,26 +37,16 @@ public class Car {
 	}
 
 	
-	public int getX() {
+	public Position getPosition() {
 		
-		return currentPosition.getX();
+		return currentPosition;
 	}
-
-	public int getY() {
+	
+	public Position getStartPosition() {
 		
-		return currentPosition.getY();
+		return startPosition;
 	}
-
-	public int getstartx() {
-		
-		return startPosition.getX();
-	}
-
-	public int getstarty() {
-		
-		return startPosition.getY();
-	}
-
+	
 	public int getturns() {
 		
 		return history.size();
@@ -72,30 +62,32 @@ public class Car {
 		return history.get(i);
 	}
 
-	public Vector getVector() {
+	public Vector getVelocity() {
 
 		return history.get(history.size()-1);
 	}
 
 	public double getSpeed() {
 
-		return getVector().length();
+		return getVelocity().getLength();
 	}
 
-	public Color getcolor() {
-		return color;
-	}
-
-	@Override
-	public String toString() {
+	public Color getColor() {
 		
-		return ("Car(" + currentPosition + "," + getVector() + ")");
+		return color;
 	}
 
 	public void crash() {
 		
 		faultcount++;
-		history.add(new Vector(0, 0));
-		
+		history.add(new Vector(0, 0));	
 	}
+	
+	@Override
+	public String toString() {
+		
+		return ("Car(" + currentPosition + "," + getVelocity() + ")");
+	}
+
+	
 }

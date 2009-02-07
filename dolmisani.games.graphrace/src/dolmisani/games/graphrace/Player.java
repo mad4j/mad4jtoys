@@ -2,13 +2,12 @@ package dolmisani.games.graphrace;
 
 import java.awt.Color;
 
-
 /**
  * This class implements both the data concerning each player, as well as
  * functions for calculating the route for the computer players.
  */
 public class Player {
-	
+
 	private int type; // Decide if this is a computer player
 	private String name; // Name of the player
 	private Car car; // The player's car
@@ -16,10 +15,6 @@ public class Player {
 	private GraphRace ppr; // The parental applet
 	private Game game;
 
-	/**
-	 * The directions to which a player can go
-	 */
-	public final static int LEFT = 0, RIGHT = 1, UP = 2, DOWN = 3, SAME = 4;
 
 	/**
 	 * The type of the player: Computer, Human or Network-player
@@ -42,14 +37,14 @@ public class Player {
 	 * @param col
 	 *            Color of the player
 	 */
-	public Player(String nm, int t, GraphRace p, int startx, int starty,
+	public Player(String nm, int t, GraphRace p, Position startPosition,
 			Color col) {
 		name = nm;
 		type = t;
 		ppr = p;
 		game = ppr.getgame();
 		circ = game.getcirc();
-		car = new Car(new Position(startx, starty), col);
+		car = new Car(startPosition, col);
 	}
 
 	/**
@@ -59,27 +54,15 @@ public class Player {
 		if (type == COM) {
 			ppr.message("Thinking...");
 			game.wait = true;
-			moveai();
+			moveai(6);
 		}
 	}
-
-	/**
-	 * @return True if the player is a computer player
-	 */
-	public boolean isai() {
-		return type == COM;
-	}
-
 
 	/**
 	 * @return The type of this player: HUM, COM, or NET
 	 */
 	public int type() {
 		return type;
-	}
-
-	public void settype(int i) {
-		type = i;
 	}
 
 	/**
@@ -90,23 +73,29 @@ public class Player {
 	 * @param x
 	 *            Vertical (circuit) location
 	 */
-	
-	public synchronized void clicked(int x, int y) {
-		int cx = car.getX() + car.getVector().getX(), cy = car.getY()
-				+ car.getVector().getY();
-		int m = -1;
-		if ((x == cx) && (y == cy))
-			m = SAME;
-		else if ((cx - x == -1) && (cy - y == 0))
-			m = RIGHT;
-		else if ((cx - x == 1) && (cy - y == 0))
-			m = LEFT;
-		else if ((cx - x == 0) && (cy - y == -1))
-			m = DOWN;
-		else if ((cx - x == 0) && (cy - y == 1))
-			m = UP;
-		if (m >= 0)
+
+	public void clicked(Position p) {
+
+		Position cp = car.getPosition().moveBy(car.getVelocity());
+
+		int cx = cp.getX();
+		int cy = cp.getY();
+		Vector m = null;
+
+		if ((p.getX() == cx) && (p.getY() == cy))
+			m = Vector.MOVE_NONE;
+		else if ((cx - p.getX() == -1) && (cy - p.getY() == 0))
+			m = Vector.MOVE_RIGHT;
+		else if ((cx - p.getX() == 1) && (cy - p.getY() == 0))
+			m = Vector.MOVE_LEFT;
+		else if ((cx - p.getX() == 0) && (cy - p.getY() == -1))
+			m = Vector.MOVE_DOWN;
+		else if ((cx - p.getX() == 0) && (cy - p.getY() == 1))
+			m = Vector.MOVE_UP;
+		
+		if (m != null) {
 			move(m);
+		}
 	}
 
 	/**
@@ -115,52 +104,30 @@ public class Player {
 	 * @param m
 	 *            One of: LEFT, RIGHT, UP, DOWN, SAME
 	 */
-	public synchronized void move(int m) {
-		Vector v = car.getVector();
-		if (game.finished())
-			return;
-		switch (m) {
-		case LEFT:
-			movecar(v.getX() - 1, v.getY());
-			break;
-		case RIGHT:
-			movecar(v.getX() + 1, v.getY());
-			break;
-		case UP:
-			movecar(v.getX(), v.getY() - 1);
-			break;
-		case DOWN:
-			movecar(v.getX(), v.getY() + 1);
-			break;
-		case SAME:
-			movecar(v.getX(), v.getY());
-			break;
-		}
+	public synchronized void move(Vector a) {
+		
+		Vector v = car.getVelocity().add(a);
+		
+		car.move(v);
 
 		ppr.paper.rebuffer();
 		ppr.repaint();
 
+		//TODO: move this logic in the Game class
 		game.nextplayer();
 		game.wait = false;
-	}
-
-	/**
-	 *Internal function for moving the car to the new position.
-	 */
-	public synchronized void movecar(int x, int y) {
-		car.move(new Vector(x, y));
 	}
 
 	/**
 	 * Checks if the car has hit the grass. If so, the speed is reduced to (0,0)
 	 */
 	public synchronized void checkterrain() {
-		if (circ.terrain(car.getX(), car.getY()) == 0) {
-			
+		if (circ.terrain(car.getPosition()) == 0) {
+
 			car.crash();
-			
-			//car.move(new Vector(0, 0)); // Grass/gravel Speed reduced to zero
-			//car.fault();
+
+			// car.move(new Vector(0, 0)); // Grass/gravel Speed reduced to zero
+			// car.fault();
 		}
 	}
 
@@ -185,42 +152,35 @@ public class Player {
 	// --------------------------------------------------------
 	// ------- Functions for the computer player --------------
 
-	int cx, cy, level, i, j;
+	//int cx, cy, level, i, j;
+	int j;
 	double distance = 0; // The current distance of the players' car
 	boolean grass;
 
 	/**
 	 * This function is called by ask() to move the computer player
 	 */
-	public void moveai() {
+	public void moveai(int maxLevel) {
+		
 		double mv;
+
+		Position center = new Position(circ.getWidth()/2, circ.getHeight() / 2);
+
+		maxLevel += (int) Math.round(car.getSpeed() * 1.4); // Level is the
+		// depth of the
+		// search
+		grass = (circ.terrain(car.getPosition()) <= 0); // Is the car
+		// currently at
+		// the grass?
+
+		Vector v = car.getVelocity();
 		
+		distance = computeDistance(center, car.getPosition());
 		
-		//if (!isai())
-		//	return; // To make sure this method isn't used illegally
-
-		cx = circ.getWidth() / 2; // The x-coordinate of the center of the
-									// circuit
-		cy = circ.getHeight() / 2; // The y-coordinate of the center of the
-									// circuit
-
-		level = 6 + (int) Math.round(car.getSpeed() * 1.4); // Level is the
-															// depth of the
-															// search
-		grass = (circ.terrain(car.getX(), car.getY()) <= 0); // Is the car
-																// currently at
-																// the grass?
-
-		Vector v = car.getVector();
-		distance = Math.atan2(-(cy - car.getY()), (cx - car.getX())) + Math.PI; // Update
-																				// the
-																				// current
-																				// distance
-																				// of
-																				// the
-																				// car
-		mv = ai(car.getX(), car.getY(), v.getX(), v.getY(), level);
-		move((int) mv);
+				
+		// the current distance of the car
+		mv = ai(center, car.getPosition(), v, maxLevel, maxLevel);
+		move(Vector.DISPLACEMENTS[(int) mv]);
 	}
 
 	/**
@@ -246,11 +206,13 @@ public class Player {
 	 * @param l
 	 *            Level of search (or number of moves to maximize)
 	 */
-	public double ai(int x, int y, int vx, int vy, int l) {
-		double[] e = new double[5];
 
-		double d = Math.atan2(-(cy - y), (cx - x)) + Math.PI; // Calculate the
-																// distance
+	public double ai(Position c, Position p, Vector v, int maxLevel, int l) {
+		
+		double[] e = new double[Vector.DISPLACEMENTS.length];
+
+		double d = computeDistance(c, p);
+		
 
 		// The arc-distance values range from 0 to 2 PI. To solve border-cases
 		// in the from 1.5 PI to 0.5 PI, checking is needed.
@@ -261,23 +223,25 @@ public class Player {
 
 		if (l > 0) {
 			// Check borders
-			if (circ.terrain(x, y) <= 0) {
-				vx = 0;
-				vy = 0;
+			if (circ.terrain(p.getX(), p.getY()) <= 0) {
+				v = Vector.MOVE_NONE;
+				
 				if (!grass)
 					l -= 2; // Penalty to get quicker results.
 			}
 
 			// If we're not done yet, check all possible routes.
-			if (l > 0) {
-				e[0] = ai(x + vx - 1, y + vy, vx - 1, vy, l - 1);
-				e[1] = ai(x + vx + 1, y + vy, vx + 1, vy, l - 1);
-				e[2] = ai(x + vx, y + vy - 1, vx, vy - 1, l - 1);
-				e[3] = ai(x + vx, y + vy + 1, vx, vy + 1, l - 1);
-				e[4] = ai(x + vx, y + vy, vx, vy, l - 1);
+			if (l > 0) {								
+								
+				for(int i=0; i<e.length; i++) {
+					
+					Vector nv = v.add(Vector.DISPLACEMENTS[i]);
+					e[i] = ai(c, p.moveBy(nv), nv, maxLevel, l-1);	
+				}
 
+				
 				// Next get the largest distance
-				for (i = 0; i < 5; i++) {
+				for (int i = 0; i < e.length; i++) {
 					if (e[i] > d) {
 						d = e[i];
 						j = i;
@@ -286,49 +250,14 @@ public class Player {
 			}
 		}
 
-		if (l == level)
+		if (l == maxLevel)
 			return j; // If this was the top-thread, return the best route
 		return d; // Else return the distance
 	}
-
-	// Old routine which used the actual distance instead of the arc-distance.
-	// This
-	// resulted in some unexpected behaviour:
-	// public int ai(int x, int y, int vx, int vy, int l, int k)
-	// {
-	// int d = 0, i, j = 0, dx,dy;
-	//
-	// int[] e = new int[5];
-	// if (l > 0)
-	// {
-	// // Check borders
-	// int t = circ.terrain(x,y);
-	// if (t <= 0)
-	// { l-=2;
-	// vx=0; vy=0;
-	// d = 0;
-	// }
-	//
-	// if (l > 0)
-	// { e[0] = ai(x+vx - 1, y+vy, vx - 1, vy , l-1,k);
-	// e[1] = ai(x+vx + 1, y+vy, vx + 1, vy , l-1,k);
-	// e[2] = ai(x+vx, y+vy - 1, vx, vy - 1, l-1,k);
-	// e[3] = ai(x+vx, y+vy + 1, vx, vy + 1, l-1,k);
-	// e[4] = ai(x+vx, y+vy, vx, vy , l-1,k);
-	//
-	// for (i=0; i<5; i++)
-	// if (e[i] > d)
-	// { d = e[i];
-	// j = i; // j is de te kiezen route als l == m
-	// }
-	// }
-	// }
-	//
-	// d += Math.sqrt(vx*vx + vy*vy);
-	// if (l == k) return j;
-	// return d;
-	// }
-
+	
+	private static final double computeDistance(Position c, Position p) {
+		
+		return Math.atan2(-(c.getY()-p.getY()), (c.getX()-p.getX())) + Math.PI;		
+	}
+	
 }
-
-

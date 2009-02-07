@@ -2,8 +2,8 @@ package dolmisani.games.graphrace;
 
 public class Position {
 	
-	private int x;
-	private int y;
+	private final int x;
+	private final int y;
 	
 	public Position(int x, int y) {
 		
@@ -11,29 +11,26 @@ public class Position {
 		this.y = y;
 	}
 
-	public Position moveBy(Vector v) {
+	public final Position moveBy(Vector v) {
 		
 		return new Position(x+v.getX(), y+v.getY());		
 	}
 	
-	public int getX() {
+	public final Position moveBackBy(Vector v) {
+		
+		return new Position(x-v.getX(), y-v.getY());
+	}
+	
+	public final int getX() {
+		
 		return x;
 	}
 
-	public void setX(int x) {
-		this.x = x;
-	}
-
-	public int getY() {
+	public final int getY() {
 		return y;
 	}
-
-	public void setY(int y) {
-		this.y = y;
-	}
-
 	
-	public boolean isNear(Position p) {
+	public final boolean isNear(Position p) {
 		
 		int dx = x - p.getX();
 		int dy = y - p.getY();
@@ -42,21 +39,19 @@ public class Position {
 	}
 	
 	@Override
-	public String toString() {
+	public final String toString() {
 
 		return String.format("[%d, %d]", x, y);
 	}
 	
 	@Override
-	public boolean equals(Object o) {
+	public final boolean equals(Object o) {
 		
 		if(o instanceof Position) {
 			
 			Position p = (Position)o;			
 			return (x == p.getX()) && (y == p.getY());
 		}
-		
-		System.out.println("FALSE");
 		
 		return false;
 	}
