@@ -42,10 +42,10 @@ class PaperView extends JPanel {
 		sizex = circ.getWidth() + 2;
 		sizey = circ.getHeight() + 2;
 		gridsize = game.getgridsize();
-		setSize(circ.getWidth() * gridsize, circ.getHeight() * gridsize);
+		
 		hsize = sizex * gridsize;
 		vsize = sizey * gridsize;
-
+		
 		image = new BufferedImage(hsize, vsize, BufferedImage.TYPE_INT_RGB);
 		gr = image.createGraphics();
 	}
@@ -56,15 +56,18 @@ class PaperView extends JPanel {
 	public void rebuffer() {
 
 		circ.paint(gr);
+		
 		drawcar();
-		//if (cursordraw)
-			drawcursor();
+		drawcursor();
+		
 		if (game.finished()) {
 			gr.setFont(new Font("Helvetica", Font.BOLD, 30));
 			gr.setColor(new Color(230, 240, 240));
-			int x = game.currentplayer().getcar().getX() * Game.gridsize - 300, y = game
-					.currentplayer().getcar().getY()
-					* Game.gridsize - 15;
+			
+			Position p = game.currentplayer().getcar().getPosition();
+			
+			int x = p.getX() * Game.gridsize - 300;
+			int y = p.getY() * Game.gridsize - 15;
 			gr.drawString("Player " + game.currentplayer().getName()
 					+ " has Finished!", x, y);
 		}
@@ -83,28 +86,22 @@ class PaperView extends JPanel {
 	 */
 	public void drawcar() {
 		
-		Car c;
-		Color color;
-		int l;
-		int x1, y1, x2, y2, sx, sy, i, j;
-
-		for (j = 0; j <= game.getplayercount(); j++) // Repeat for all players
-		{
-			c = game.getplayer(j).getcar();
-			color = c.getcolor();
-			l = c.getturns();
-			sx = c.getstartx(); // Get the start position to draw from
-			sy = c.getstarty();
-			x1 = sx;
-			y1 = sy;
-			for (i = 0; i < l; i++) {
-				x2 = x1 + c.getHistory(i).getX();
-				y2 = y1 + c.getHistory(i).getY();
-				drawline(x1, y1, x2, y2, color); // Draw a line for between all
-				// locations
-				fillcircle(x2, y2, color); // Mark all locations
-				x1 = x2;
-				y1 = y2;
+		//TODO: check '<' instead of '<=', is a tricky way to render the current player as last player
+		for (int playerIndex = 0; playerIndex<=game.getplayercount(); playerIndex++) {
+		
+			Car car = game.getplayer(playerIndex).getcar();
+			
+			Position sp = car.getStartPosition();
+			Position p1 = sp;
+			
+			for (int i = 0; i < car.getturns(); i++) {
+				
+				Position p2 = p1.moveBy(car.getHistory(i));
+				
+				drawLine(p1, p2, car.getColor()); // Draw a line for between all locations
+				fillCircle(p2, car.getColor()); // Mark all locations
+				
+				p1 = p2;				
 			}
 		}
 	}
@@ -116,13 +113,24 @@ class PaperView extends JPanel {
 		game.currentplayer().checkterrain(); // Check if the speed is still
 		// correct...
 		Car c = game.currentplayer().getcar();
-		int x = c.getX() + c.getVector().getX(), y = c.getY()
-				+ c.getVector().getY();
+		
+		Position p = c.getPosition().moveBy(c.getVelocity());
+		
+		//int x = c.getX() + c.getVector().getX();
+		//int y = c.getY() + c.getVector().getY();
 		/**
 		 * The player can move to 5 locations, some of them are on grass, and
 		 * will be colored differently
 		 */
-		drawcircle(x, y, circ.terrain(x, y) > 0 ? Color.cyan : Color.red);
+		
+		for(Vector offset: Vector.DISPLACEMENTS) {
+			
+			Position cp = p.moveBy(offset);
+			drawcircle(cp, circ.terrain(cp) > 0 ? Color.cyan : Color.red);
+			
+		}
+/*
+		drawcircle(p, circ.terrain(p) > 0 ? Color.cyan : Color.red);
 		drawcircle(x - 1, y, circ.terrain(x - 1, y) > 0 ? Color.cyan
 				: Color.red);
 		drawcircle(x, y - 1, circ.terrain(x, y - 1) > 0 ? Color.cyan
@@ -131,6 +139,7 @@ class PaperView extends JPanel {
 				: Color.red);
 		drawcircle(x, y + 1, circ.terrain(x, y + 1) > 0 ? Color.cyan
 				: Color.red);
+*/				
 	}
 
 	/**
@@ -143,10 +152,10 @@ class PaperView extends JPanel {
 	 * @param c
 	 *            Color of the circle
 	 */
-	public void drawcircle(int x, int y, Color c) {
+	public void drawcircle(Position p, Color c) {
 		int s = (int) gridsize / 4;
 		gr.setColor(c);
-		gr.drawOval(x * gridsize - s, y * gridsize - s, 2 * s, 2 * s);
+		gr.drawOval(p.getX() * gridsize - s, p.getY() * gridsize - s, 2 * s, 2 * s);
 	}
 
 	/**
@@ -159,10 +168,10 @@ class PaperView extends JPanel {
 	 * @param c
 	 *            Color of the circle
 	 */
-	public void fillcircle(int x, int y, Color c) {
+	public void fillCircle(Position p, Color c) {
 		int s = (int) (gridsize / 3) - 1;
 		gr.setColor(c);
-		gr.fillOval(x * gridsize - s, y * gridsize - s, 2 * s, 2 * s);
+		gr.fillOval(p.getX()*gridsize - s, p.getY()*gridsize - s, 2 * s, 2 * s);
 	}
 
 	/**
@@ -179,9 +188,9 @@ class PaperView extends JPanel {
 	 * @param c
 	 *            Color of the line
 	 */
-	public void drawline(int x1, int y1, int x2, int y2, Color c) {
+	public void drawLine(Position p1, Position p2, Color c) {
 		gr.setColor(c);
-		gr.drawLine(x1 * gridsize, y1 * gridsize, x2 * gridsize, y2 * gridsize);
+		gr.drawLine(p1.getX()*gridsize, p1.getY()*gridsize, p2.getX()*gridsize, p2.getY()*gridsize);
 	}
 
 	@Override

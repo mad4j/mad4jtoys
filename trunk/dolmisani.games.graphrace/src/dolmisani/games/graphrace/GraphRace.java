@@ -176,9 +176,9 @@ public class GraphRace extends JFrame implements MouseListener, KeyListener,
 	 * sets a given text in the player label.
 	 */
 	public void showcurrentplayer() {
-		playerlabel.setForeground(game.currentplayer().getcar().getcolor());
+		playerlabel.setForeground(game.currentplayer().getcar().getColor());
 		playerlabel.setText("Player: " + game.currentplayer().getName()
-				+ ", Moving: " + game.currentplayer().getcar().getVector());
+				+ ", Moving: " + game.currentplayer().getcar().getVelocity());
 	}
 
 	public void setmessages() {
@@ -186,9 +186,7 @@ public class GraphRace extends JFrame implements MouseListener, KeyListener,
 		turnlabel.setText("Turn: "
 				+ game.currentplayer().getcar().getplayerturns());
 		if (game.finished())
-			message(game.getplayer(game.winner).getName() + " WINS!!!");
-		else if (game.currentplayer().isai())
-			message("Click or press a key");
+			message(game.getWinnerPlayer().getName() + " WINS!!!");
 		else
 			message("Do a move");
 	}
@@ -232,8 +230,8 @@ public class GraphRace extends JFrame implements MouseListener, KeyListener,
 			return;
 		game.wait = true;
 
-		game.currentplayer().clicked((int) Math.round(x / Game.gridsize),
-				(int) Math.round(y / Game.gridsize));
+		game.currentplayer().clicked(new Position((int)Math.round(x/Game.gridsize),
+				(int)Math.round(y/Game.gridsize)));
 		repaint();
 		game.wait = false;
 	}
@@ -268,7 +266,7 @@ public class GraphRace extends JFrame implements MouseListener, KeyListener,
 			game.wait = false;
 			return;
 		}
-
+/*
 		switch (k) {
 		case KeyEvent.VK_NUMPAD4:
 			game.currentplayer().move(0);
@@ -286,7 +284,7 @@ public class GraphRace extends JFrame implements MouseListener, KeyListener,
 			game.currentplayer().move(4);
 			break;
 		}
-
+*/
 		repaint();
 		game.wait = false;
 	}
@@ -304,6 +302,6 @@ public class GraphRace extends JFrame implements MouseListener, KeyListener,
 		if (avt.getSource() == newgame)
 			new NewGameWindow(this);
 
-		repaint();
+		//repaint();
 	}
 }
