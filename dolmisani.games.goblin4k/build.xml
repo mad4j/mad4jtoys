@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<project name="buildjar" default="build" basedir=".">
+
+	<property name="src" value="." />
+	<property name="dest" value="release" />
+
+	<property name="build" value="build" />
+
+	<target name="clean">
+		<delete />
+	</target>
+
+	<target name="init">
+		<mkdir dir="${build}" />
+	</target>
+
+	<target name="build" depends="init">
+		<!-- Compile the java code -->
+
+		<javac srcdir="${src}" destdir="${build}" />
+	</target>
+</project>
