@@ -8,7 +8,6 @@ import java.awt.event.KeyEvent;
 import java.awt.image.BufferStrategy;
 import java.awt.image.BufferedImage;
 import java.util.prefs.Preferences;
-
 import javax.sound.midi.MidiChannel;
 import javax.sound.midi.MidiSystem;
 import javax.sound.midi.MidiUnavailableException;
@@ -37,6 +36,11 @@ public class G extends JFrame {
 
 	private static final int PIXEL_SIZE = 2;
 	private static final int CELL_SIZE = 8*PIXEL_SIZE;
+
+	private static final int GAMEFIELD_BORDER = 40;
+	
+	private static final int WINDOW_WIDTH = BOARD_WIDTH*CELL_SIZE+2*GAMEFIELD_BORDER;
+	private static final int WINDOW_HEIGHT = BOARD_HEIGHT*CELL_SIZE+2*GAMEFIELD_BORDER;
 
 
 	private int[][] board = new int[BOARD_WIDTH][BOARD_HEIGHT];
@@ -82,12 +86,10 @@ public class G extends JFrame {
 		drawFace(g, 0, 0, true);
 		setIconImage(temp);
 		
-		setSize(800, 600);
+		setSize(WINDOW_WIDTH, WINDOW_HEIGHT);
 		setResizable(false);
 
 		setVisible(true);
-		
-		
 		
 		bestScore = prefs.getInt("hires", 0);
 
@@ -163,25 +165,20 @@ public class G extends JFrame {
 
 
 				if (board[x][y] == TILE_ROCK) {
-					
-					
-					
 					g.setColor(Color.ORANGE);
-					drawRock(g, 20+x*CELL_SIZE, 15+y*CELL_SIZE);
-					
-					
+					drawRock(g, x*CELL_SIZE, y*CELL_SIZE);
 				}
 				
 				if (board[x][y] == TILE_FACE_SAD) {
 					
 
 					g.setColor(Color.BLACK);
-					drawFace(g, 20+x*CELL_SIZE, 15+y*CELL_SIZE, false);
+					drawFace(g, x*CELL_SIZE, y*CELL_SIZE, false);
 
 				}
 						
 				g.setColor(Color.green.darker());
-				drawGoblin(g,20+goblinX*CELL_SIZE, 15+goblinY*CELL_SIZE);
+				drawGoblin(g, goblinX*CELL_SIZE, goblinY*CELL_SIZE);
 			}
 		}
 
@@ -282,11 +279,14 @@ public class G extends JFrame {
 	 */
 	private void draw(Graphics2D g) {
 		// clear the background
+		
+		g.setColor(Color.CYAN);
+		g.fillRect(0, 0, getWidth(), getHeight());
+		
+		g.translate(GAMEFIELD_BORDER, GAMEFIELD_BORDER);
+		
 		g.setColor(Color.white);
-		g.fillRect(0, 0, 800, 600);
-
-		g.translate(0, 30);
-
+		g.fillRect(0, 0, WINDOW_WIDTH-2*GAMEFIELD_BORDER, WINDOW_HEIGHT-2*GAMEFIELD_BORDER);		
 		
 		renderBoard(g);
 		
@@ -295,14 +295,14 @@ public class G extends JFrame {
 		if (!started) {
 			g.setPaint(Color.black);
 			g.fillRect(80, 165, 330, 50);
-			g.setColor(Color.black);
+			g.setColor(Color.white);
 			g.drawRect(80, 165, 330, 50);
 			g.drawString(msg, ((500 - g.getFontMetrics().stringWidth(msg)) / 2), 200);
 		}
 
 		g.setColor(Color.black);
 		g.setFont(g.getFont().deriveFont(Font.BOLD, 14.0f));
-		g.drawString(String.format("Goblin4k Score: %06d BestScore: %06d Level: %02d", score, bestScore, level), 20, 20);
+		g.drawString(String.format("Faces: %03d Score: %06d BestScore: %06d Level: %02d", facesCount, score, bestScore, level), GAMEFIELD_BORDER, WINDOW_HEIGHT-2*GAMEFIELD_BORDER);
 		
 	}
 
@@ -370,12 +370,15 @@ public class G extends JFrame {
 	
 	private void drawRock(Graphics2D g, int x, int y) {
 		
-		
+		/*
 		g.fillRect(x+2*PIXEL_SIZE, y+0*PIXEL_SIZE, 4*PIXEL_SIZE, 1*PIXEL_SIZE);
 		g.fillRect(x+1*PIXEL_SIZE, y+1*PIXEL_SIZE, 6*PIXEL_SIZE, 1*PIXEL_SIZE);
 		g.fillRect(x+0*PIXEL_SIZE, y+2*PIXEL_SIZE, 8*PIXEL_SIZE, 4*PIXEL_SIZE);
 		g.fillRect(x+1*PIXEL_SIZE, y+6*PIXEL_SIZE, 6*PIXEL_SIZE, 1*PIXEL_SIZE);
 		g.fillRect(x+2*PIXEL_SIZE, y+7*PIXEL_SIZE, 4*PIXEL_SIZE, 1*PIXEL_SIZE);
+		*/
+		
+		g.fillRect(x+1*PIXEL_SIZE, y+1*PIXEL_SIZE, 6*PIXEL_SIZE, 6*PIXEL_SIZE);
 		
 	}
 	
