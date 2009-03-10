@@ -4,15 +4,11 @@ import java.awt.AWTEvent;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics2D;
-import java.awt.RenderingHints;
 import java.awt.event.KeyEvent;
 import java.awt.image.BufferStrategy;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
+import java.util.prefs.Preferences;
 
-import javax.sound.midi.Instrument;
 import javax.sound.midi.MidiChannel;
 import javax.sound.midi.MidiSystem;
 import javax.sound.midi.MidiUnavailableException;
@@ -61,8 +57,6 @@ public class G extends JFrame {
 	
 	private MidiChannel channel;
 	
-	private File f;
-	
 
 	private int facesCount;
 	private int goblinX;
@@ -73,6 +67,8 @@ public class G extends JFrame {
 	private int TILE_FACE_SAD = 2;
 	private int TILE_FACE_HAPPY = 3;
 
+	private Preferences prefs = Preferences.userRoot().node("/dolmisani/games/goblin4k");
+	
 	private G() {
 		
 		super("Goblin4k");
@@ -90,20 +86,10 @@ public class G extends JFrame {
 		setResizable(false);
 
 		setVisible(true);
-
-		f = new File(System.getProperty("user.home") + File.separator
-				+ "goblin4k.hiscores");
-		if (f.exists()) {
-			try {
-				
-				FileInputStream in = new FileInputStream(f);
-				byte[] dat = new byte[in.available()];
-				in.read(dat);
-				bestScore = Integer.parseInt(new String(dat));
-				in.close();
-			} catch (Throwable e) {
-			}
-		}
+		
+		
+		
+		bestScore = prefs.getInt("hires", 0);
 
 		enableEvents(AWTEvent.KEY_EVENT_MASK);
 
@@ -117,10 +103,7 @@ public class G extends JFrame {
 		try {
 			Synthesizer synthesizer = MidiSystem.getSynthesizer();
 			
-			
-		
 			synthesizer.open();
-			System.out.println(synthesizer.getAvailableInstruments().length);
 			
 			channel = synthesizer.getChannels()[0];
 			Patch patch = synthesizer.getAvailableInstruments()[407].getPatch();
@@ -154,19 +137,19 @@ public class G extends JFrame {
 			}
 		}
 
-		for (int i = 0; i < 10; i++) {
+		for (int i = 0; i < 65; i++) {
 			int x = (int) (Math.random() * BOARD_WIDTH);
-			int y = (int) (Math.random() * BOARD_HEIGHT);
+			int y = (int) (Math.random() * BOARD_HEIGHT-1);
 			board[x][y] = TILE_ROCK;
 		}
 
-		for (int i = 0; i < 10; i++) {
+		for (int i = 0; i < 20; i++) {
 			int x = (int) (Math.random() * BOARD_WIDTH);
 			int y = (int) (Math.random() * BOARD_HEIGHT);
 			board[x][y] = TILE_FACE_SAD;
 		}
 		
-		facesCount = 10;
+		facesCount = 20;
 		goblinX = BOARD_WIDTH / 2;
 		goblinY = BOARD_HEIGHT - 1;
 	}
@@ -197,9 +180,8 @@ public class G extends JFrame {
 
 				}
 						
-				g.setColor(Color.green);
-				g.fillRect(20 + (goblinX * CELL_SIZE), 15 + (goblinY * CELL_SIZE), CELL_SIZE, CELL_SIZE);
-				
+				g.setColor(Color.green.darker());
+				drawGoblin(g,20+goblinX*CELL_SIZE, 15+goblinY*CELL_SIZE);
 			}
 		}
 
@@ -211,16 +193,11 @@ public class G extends JFrame {
 	private void init() {
 		if (score > bestScore) {
 			bestScore = score;
+			prefs.putInt("hires", bestScore);
 		}
-
-		try {
-			FileOutputStream out = new FileOutputStream(f);
-			out.write(new String("" + bestScore).getBytes());
-			out.close();
-		} catch (Throwable e) {
-		}
-
+		
 		level = 1;
+		score = 0;
 		
 		randomBoard(level);
 
@@ -402,6 +379,32 @@ public class G extends JFrame {
 		
 	}
 	
+	private void drawGoblin(Graphics2D g, int x, int y) {
+		
+		
+		g.fillRect(x+1*PIXEL_SIZE, y+0*PIXEL_SIZE, 6*PIXEL_SIZE, 1*PIXEL_SIZE);
+		
+		g.fillRect(x+0*PIXEL_SIZE, y+1*PIXEL_SIZE, 2*PIXEL_SIZE, 3*PIXEL_SIZE);
+		g.fillRect(x+3*PIXEL_SIZE, y+1*PIXEL_SIZE, 2*PIXEL_SIZE, 3*PIXEL_SIZE);
+		g.fillRect(x+6*PIXEL_SIZE, y+1*PIXEL_SIZE, 2*PIXEL_SIZE, 3*PIXEL_SIZE);
+		
+		g.fillRect(x+0*PIXEL_SIZE, y+3*PIXEL_SIZE, 8*PIXEL_SIZE, 1*PIXEL_SIZE);
+		
+		g.fillRect(x+0*PIXEL_SIZE, y+4*PIXEL_SIZE, 1*PIXEL_SIZE, 1*PIXEL_SIZE);
+		g.fillRect(x+2*PIXEL_SIZE, y+4*PIXEL_SIZE, 1*PIXEL_SIZE, 1*PIXEL_SIZE);
+		g.fillRect(x+5*PIXEL_SIZE, y+4*PIXEL_SIZE, 1*PIXEL_SIZE, 1*PIXEL_SIZE);
+		g.fillRect(x+7*PIXEL_SIZE, y+4*PIXEL_SIZE, 1*PIXEL_SIZE, 1*PIXEL_SIZE);
+		
+		g.fillRect(x+1*PIXEL_SIZE, y+5*PIXEL_SIZE, 1*PIXEL_SIZE, 2*PIXEL_SIZE);
+		g.fillRect(x+3*PIXEL_SIZE, y+5*PIXEL_SIZE, 2*PIXEL_SIZE, 2*PIXEL_SIZE);
+		g.fillRect(x+6*PIXEL_SIZE, y+5*PIXEL_SIZE, 1*PIXEL_SIZE, 2*PIXEL_SIZE);
+		
+		g.fillRect(x+0*PIXEL_SIZE, y+7*PIXEL_SIZE, 1*PIXEL_SIZE, 1*PIXEL_SIZE);
+		g.fillRect(x+2*PIXEL_SIZE, y+7*PIXEL_SIZE, 1*PIXEL_SIZE, 1*PIXEL_SIZE);
+		g.fillRect(x+5*PIXEL_SIZE, y+7*PIXEL_SIZE, 1*PIXEL_SIZE, 1*PIXEL_SIZE);
+		g.fillRect(x+7*PIXEL_SIZE, y+7*PIXEL_SIZE, 1*PIXEL_SIZE, 1*PIXEL_SIZE);
+	}
+	
 /*	
 	private static final void playNote(final MidiChannel channel, final int noteNumber, final int velocity, final long duration) {
 		
@@ -423,4 +426,7 @@ public class G extends JFrame {
 */	
 	
 }
+
+
+
 
