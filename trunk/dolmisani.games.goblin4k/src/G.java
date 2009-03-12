@@ -282,11 +282,11 @@ public class G extends JFrame {
 		
 		g.setColor(Color.CYAN);
 		g.fillRect(0, 0, getWidth(), getHeight());
-		
-		g.translate(GAMEFIELD_BORDER, GAMEFIELD_BORDER);
+	
+		g.translate(getInsets().left+(WINDOW_WIDTH-getInsets().left-getInsets().right-BOARD_WIDTH*CELL_SIZE)/2, getInsets().top+(WINDOW_HEIGHT-getInsets().top-getInsets().bottom-BOARD_HEIGHT*CELL_SIZE)/2);
 		
 		g.setColor(Color.white);
-		g.fillRect(0, 0, WINDOW_WIDTH-2*GAMEFIELD_BORDER, WINDOW_HEIGHT-2*GAMEFIELD_BORDER);		
+		g.fillRect(0, 0, BOARD_WIDTH*CELL_SIZE, BOARD_HEIGHT*CELL_SIZE);		
 		
 		renderBoard(g);
 		
@@ -302,7 +302,7 @@ public class G extends JFrame {
 
 		g.setColor(Color.black);
 		g.setFont(g.getFont().deriveFont(Font.BOLD, 14.0f));
-		g.drawString(String.format("Faces: %03d Score: %06d BestScore: %06d Level: %02d", facesCount, score, bestScore, level), GAMEFIELD_BORDER, WINDOW_HEIGHT-2*GAMEFIELD_BORDER);
+		g.drawString(String.format("Faces: %03d Score: %06d BestScore: %06d Level: %02d", facesCount, score, bestScore, level), 0, BOARD_HEIGHT*CELL_SIZE+14);
 		
 	}
 
