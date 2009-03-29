@@ -26,7 +26,7 @@ import java.awt.Graphics2D;
 import java.awt.event.KeyEvent;
 import java.awt.image.BufferStrategy;
 import java.awt.image.BufferedImage;
-import java.util.prefs.Preferences;
+//import java.util.prefs.Preferences;
 
 import javax.sound.midi.MidiChannel;
 import javax.sound.midi.MidiSystem;
@@ -86,7 +86,7 @@ public class G extends JFrame {
 		
 		int[][] board = new int[BOARD_WIDTH][BOARD_HEIGHT];
 		
-		Preferences prefs = Preferences.userRoot().node(PREFS_NODE_ROOT);
+		//Preferences prefs = Preferences.userRoot().node(PREFS_NODE_ROOT);
 		
 		// set the window size
 		getContentPane().setPreferredSize(
@@ -138,7 +138,8 @@ public class G extends JFrame {
 
 		int state = STATE_NEW_GAME;
 		int score = 0;
-		int bestScore = prefs.getInt(PREFS_NODE_NAME, 0);
+		//int bestScore = prefs.getInt(PREFS_NODE_NAME, 0);
+		int bestScore = 0;
 
 		int level = 1;
 
@@ -237,7 +238,7 @@ public class G extends JFrame {
 				
 				if (score > bestScore) {
 					bestScore = score;
-					prefs.putInt(PREFS_NODE_NAME, bestScore);
+					//prefs.putInt(PREFS_NODE_NAME, bestScore);
 				}
 
 				for (y = 0; y < BOARD_HEIGHT; y++) {
