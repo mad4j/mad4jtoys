@@ -25,8 +25,7 @@ import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.event.KeyEvent;
 import java.awt.image.BufferStrategy;
-import java.awt.image.BufferedImage;
-//import java.util.prefs.Preferences;
+import java.awt.image.BufferedImage; //import java.util.prefs.Preferences;
 
 import javax.sound.midi.MidiChannel;
 import javax.sound.midi.MidiSystem;
@@ -34,8 +33,6 @@ import javax.sound.midi.MidiUnavailableException;
 import javax.sound.midi.Patch;
 import javax.sound.midi.Synthesizer;
 import javax.swing.JFrame;
-
-
 
 @SuppressWarnings("serial")
 public class G extends JFrame {
@@ -61,15 +58,13 @@ public class G extends JFrame {
 	private static final int TILE_FACE_HAPPY = 2;
 
 	private static final int MAX_TILES = 3;
-	
-	private static final String PREFS_NODE_ROOT = "/dolmisani/games/goblin4k";
-	private static final String PREFS_NODE_NAME = "hires";
 
-	
+	//private static final String PREFS_NODE_ROOT = "/dolmisani/games/goblin4k";
+	//private static final String PREFS_NODE_NAME = "hires";
+
 	private boolean key[] = new boolean[65535];
 	private boolean keyLock[] = new boolean[65535];
 
-	
 	public static void main(String[] args) {
 		new G();
 	}
@@ -81,13 +76,14 @@ public class G extends JFrame {
 		int x, y, i;
 		int speed = 30;
 		int stepCounter = 0;
-		
+
 		int facesCount = 0;
-		
+		int rocksCount = 0;
+
 		int[][] board = new int[BOARD_WIDTH][BOARD_HEIGHT];
-		
-		//Preferences prefs = Preferences.userRoot().node(PREFS_NODE_ROOT);
-		
+
+		// Preferences prefs = Preferences.userRoot().node(PREFS_NODE_ROOT);
+
 		// set the window size
 		getContentPane().setPreferredSize(
 				new Dimension(GAMEFILED_WIDTH, GAMEFILED_HEIGHT));
@@ -110,7 +106,6 @@ public class G extends JFrame {
 		drawGoblin(playerImage.createGraphics());
 
 		BufferedImage[] tiles = new BufferedImage[MAX_TILES];
-
 
 		tiles[TILE_ROCK] = new BufferedImage(TILE_SIZE, TILE_SIZE,
 				BufferedImage.TYPE_INT_ARGB);
@@ -138,10 +133,10 @@ public class G extends JFrame {
 
 		int state = STATE_NEW_GAME;
 		int score = 0;
-		//int bestScore = prefs.getInt(PREFS_NODE_NAME, 0);
+		// int bestScore = prefs.getInt(PREFS_NODE_NAME, 0);
 		int bestScore = 0;
 
-		int level = 1;
+		int level = 0;
 
 		int playerX = 0;
 		int playerY = 0;
@@ -160,20 +155,30 @@ public class G extends JFrame {
 		createBufferStrategy(2);
 		BufferStrategy strategy = getBufferStrategy();
 
-		//ok now on screen
+		// ok now on screen
 		setIconImage(playerImage);
 		setVisible(true);
-		
+
 		long nextFrameStart = System.nanoTime();
-		while(true) {
+		while (true) {
 
 			stepCounter++;
 
 			nextFrameStart += 16666667;
 
-			if (state == STATE_NEW_GAME || state == STATE_INIT
-					|| state == STATE_INIT_LEVEL) {
-				// LEVEL INITIALIZATION
+			if (state == STATE_NEW_GAME) {
+
+				level = 0;
+				score = 0;
+				state = STATE_INIT;
+			}
+
+			if (state == STATE_INIT) {
+
+				facesCount = 0;
+				rocksCount = 0;
+
+				level++;
 
 				for (x = 0; x < BOARD_WIDTH; x++) {
 					for (y = 0; y < BOARD_HEIGHT; y++) {
@@ -181,40 +186,52 @@ public class G extends JFrame {
 					}
 				}
 
-				for (i = 0; i < 65; i++) {
+				state = STATE_INIT_LEVEL;
+			}
+
+			if (state == STATE_INIT_LEVEL) {
+				// LEVEL INITIALIZATION
+
+				if (rocksCount < 65) {
+
+					// for (i = 0; i < 65; i++) {
 					do {
-						x = (int)(Math.random() * BOARD_WIDTH);
-						y = (int)(Math.random() * BOARD_HEIGHT - 1);
+						x = (int) (Math.random() * BOARD_WIDTH);
+						y = (int) (Math.random() * BOARD_HEIGHT - 1);
 					} while (board[x][y] != TILE_NOTHING);
 					board[x][y] = TILE_ROCK;
+					rocksCount++;
 
 				}
 
-				// facesCount = 0;
-				// while(facesCount < 20) {
-				for (i = 0; i < 20; i++) {
+				if (facesCount < 20) {
+					// for (i = 0; i < 20; i++) {
 					do {
-						x = (int)(Math.random() * BOARD_WIDTH);
-						y = (int)(Math.random() * BOARD_HEIGHT - 1);
+						x = (int) (Math.random() * BOARD_WIDTH);
+						y = (int) (Math.random() * BOARD_HEIGHT - 1);
 					} while (board[x][y] != TILE_NOTHING);
 					board[x][y] = TILE_FACE_SAD;
-					// facesCount++;
+					facesCount++;
 				}
 
-				facesCount = 20;
+				// facesCount = 20;
 				playerX = BOARD_WIDTH / 2;
 				playerY = BOARD_HEIGHT - 1;
 
 				// if(facesCount >= 20) {
-				if (state == STATE_INIT) {
+				//if (state == STATE_INIT) {
 					// GAME INITIALIZATION
-					level = 1;
-					score = 0;
-				}
-				if (state != STATE_NEW_GAME) {
-					state = STATE_PLAYING;
-				}
+				//	level = 1;
+				//	score = 0;
+				//}
+				// if (state != STATE_NEW_GAME) {
+				// state = STATE_PLAYING;
 				// }
+				// }
+			}
+
+			if ((rocksCount >= 65) && (facesCount >= 20)) {
+				state = STATE_PLAYING;
 			}
 
 			/*****************************************************************
@@ -235,10 +252,10 @@ public class G extends JFrame {
 			}
 
 			if (state == STATE_GAME_OVER) {
-				
+
 				if (score > bestScore) {
 					bestScore = score;
-					//prefs.putInt(PREFS_NODE_NAME, bestScore);
+					// prefs.putInt(PREFS_NODE_NAME, bestScore);
 				}
 
 				for (y = 0; y < BOARD_HEIGHT; y++) {
@@ -310,10 +327,7 @@ public class G extends JFrame {
 					channel.noteOff(60);
 
 					if (facesCount == 0) {
-						state = STATE_INIT_LEVEL;
-						
-						//TODO: move to level initialization
-						level++;
+						state = STATE_INIT;
 					}
 				}
 			}
@@ -349,25 +363,26 @@ public class G extends JFrame {
 				g.setColor(Color.red);
 				g.drawString("GAME OVER. Press 'Enter' To Start ", 140, 300);
 			}
-			
-			if(state == STATE_GAME_OVER) {
-				
+
+			if (state == STATE_GAME_OVER) {
+
 				g.setColor(new Color(0xaa000000));
-				g.fillRect(0, (int)(getHeight()*0.7), getWidth(), 30);
+				g.fillRect(0, (int) (getHeight() * 0.7), getWidth(), 30);
 				g.setColor(Color.WHITE);
 				String msg = "Game Over";
 				g.setFont(new Font("sansserif", Font.BOLD, 14));
-				g.drawString(msg, (GAMEFILED_WIDTH - g.getFontMetrics().stringWidth(msg)) / 2, (int)(getHeight()*0.7)+(30-14)/2);
-				
+				g.drawString(msg, (GAMEFILED_WIDTH - g.getFontMetrics()
+						.stringWidth(msg)) / 2, (int) (getHeight() * 0.7)
+						+ (30 - 14) / 2);
+
 			}
-			
 
 			strategy.show();
 
-			//Suspend until the next frame
-			//TODO: what happen if sleep parameter is negative??
+			// Suspend until the next frame
+			// TODO: what happen if sleep parameter is negative??
 			try {
-				Thread.sleep((nextFrameStart-System.nanoTime()) / 1000000);
+				Thread.sleep((nextFrameStart - System.nanoTime()) / 1000000);
 			} catch (Throwable t) {
 			}
 
