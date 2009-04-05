@@ -4,19 +4,18 @@
  *
  * This file is part of Goblin4k.
  *
- * Invaders is free software; you can redistribute it and/or modify
+ * Goblin4k is free software; you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published
  * by the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
- * Invaders is distributed in the hope that it will be useful,
+ * Goblin4k is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 import java.awt.Color;
@@ -25,23 +24,28 @@ import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.event.KeyEvent;
 import java.awt.image.BufferStrategy;
-import java.awt.image.BufferedImage; //import java.util.prefs.Preferences;
-
+import java.awt.image.BufferedImage; 
 import javax.sound.midi.MidiChannel;
 import javax.sound.midi.MidiSystem;
-import javax.sound.midi.MidiUnavailableException;
 import javax.sound.midi.Patch;
 import javax.sound.midi.Synthesizer;
 import javax.swing.JFrame;
 
+/**
+ *  Goblin4k is a remake of glorious game of the Commodore Vic20.
+ *  This version is developped using the Java4k coding rules.
+ *  
+ * @author Daniele Olmisani (daniele.olmisani@gmail.com)
+ *
+ */
 @SuppressWarnings("serial")
 public class G extends JFrame {
 
 	private static final int STATE_NEW_GAME = 0;
 	private static final int STATE_PLAYING = 1;
 	private static final int STATE_GAME_OVER = 2;
-	private static final int STATE_INIT = 3;
-	private static final int STATE_INIT_LEVEL = 4;
+	private static final int STATE_LEVEL_INIT = 3;
+	private static final int STATE_LEVEL_BUILD = 4;
 
 	private static final int BOARD_WIDTH = 32;
 	private static final int BOARD_HEIGHT = 24;
@@ -59,8 +63,9 @@ public class G extends JFrame {
 
 	private static final int MAX_TILES = 3;
 
-	//private static final String PREFS_NODE_ROOT = "/dolmisani/games/goblin4k";
-	//private static final String PREFS_NODE_NAME = "hires";
+	private static final int MAX_ROCKS = 65;
+	private static final int MAX_FACES = 20;
+	
 
 	private boolean key[] = new boolean[65535];
 	private boolean keyLock[] = new boolean[65535];
@@ -73,16 +78,25 @@ public class G extends JFrame {
 
 		super("Goblin4k");
 
-		int x, y, i;
-		int speed = 30;
+		int x = 0;
+		int y = 0;
+		int playerSpeed = 0;
 		int stepCounter = 0;
 
 		int facesCount = 0;
 		int rocksCount = 0;
 
+		int gameState = STATE_NEW_GAME;
+		int score = 0;
+		int bestScore = 0;
+
+		int level = 0;
+
+		int playerX = 0;
+		int playerY = 0;
+		
 		int[][] board = new int[BOARD_WIDTH][BOARD_HEIGHT];
 
-		// Preferences prefs = Preferences.userRoot().node(PREFS_NODE_ROOT);
 
 		// set the window size
 		getContentPane().setPreferredSize(
@@ -110,7 +124,7 @@ public class G extends JFrame {
 		tiles[TILE_ROCK] = new BufferedImage(TILE_SIZE, TILE_SIZE,
 				BufferedImage.TYPE_INT_ARGB);
 		drawRock(tiles[TILE_ROCK].createGraphics());
-
+		
 		tiles[TILE_FACE_SAD] = new BufferedImage(TILE_SIZE, TILE_SIZE,
 				BufferedImage.TYPE_INT_ARGB);
 		drawFace(tiles[TILE_FACE_SAD].createGraphics(), false);
@@ -128,18 +142,10 @@ public class G extends JFrame {
 			channel = synthesizer.getChannels()[0];
 			Patch patch = synthesizer.getAvailableInstruments()[407].getPatch();
 			channel.programChange(patch.getBank(), patch.getProgram());
-		} catch (MidiUnavailableException e) {
+		} catch (Exception e) {
 		}
 
-		int state = STATE_NEW_GAME;
-		int score = 0;
-		// int bestScore = prefs.getInt(PREFS_NODE_NAME, 0);
-		int bestScore = 0;
-
-		int level = 0;
-
-		int playerX = 0;
-		int playerY = 0;
+	
 
 		// TODO : Scenery
 		BufferedImage scenery = new BufferedImage(GAMEFILED_WIDTH,
@@ -161,78 +167,71 @@ public class G extends JFrame {
 
 		long nextFrameStart = System.nanoTime();
 		while (true) {
-
+			
 			stepCounter++;
-
 			nextFrameStart += 16666667;
 
-			if (state == STATE_NEW_GAME) {
-
+			if (gameState == STATE_NEW_GAME) {
+				
 				level = 0;
 				score = 0;
-				state = STATE_INIT;
+				
+				playerSpeed = 30;
 			}
 
-			if (state == STATE_INIT) {
+			if(gameState == STATE_LEVEL_INIT) {
 
 				facesCount = 0;
 				rocksCount = 0;
 
 				level++;
+				playerSpeed -= 2;
+				if(playerSpeed < 0) {
+					playerSpeed = 0;
+				}
 
 				for (x = 0; x < BOARD_WIDTH; x++) {
 					for (y = 0; y < BOARD_HEIGHT; y++) {
 						board[x][y] = TILE_NOTHING;
 					}
 				}
-
-				state = STATE_INIT_LEVEL;
+				gameState = STATE_LEVEL_BUILD;
 			}
 
-			if (state == STATE_INIT_LEVEL) {
+			if(gameState == STATE_LEVEL_BUILD) {
 				// LEVEL INITIALIZATION
 
-				if (rocksCount < 65) {
+				if (rocksCount < MAX_ROCKS) {
 
-					// for (i = 0; i < 65; i++) {
 					do {
 						x = (int) (Math.random() * BOARD_WIDTH);
 						y = (int) (Math.random() * BOARD_HEIGHT - 1);
 					} while (board[x][y] != TILE_NOTHING);
 					board[x][y] = TILE_ROCK;
 					rocksCount++;
-
 				}
 
-				if (facesCount < 20) {
-					// for (i = 0; i < 20; i++) {
+				if (facesCount < MAX_FACES) {
+
 					do {
-						x = (int) (Math.random() * BOARD_WIDTH);
-						y = (int) (Math.random() * BOARD_HEIGHT - 1);
+						x = (int)(Math.random() * BOARD_WIDTH);
+						y = (int)(Math.random() * BOARD_HEIGHT - 1);
 					} while (board[x][y] != TILE_NOTHING);
 					board[x][y] = TILE_FACE_SAD;
 					facesCount++;
 				}
 
-				// facesCount = 20;
 				playerX = BOARD_WIDTH / 2;
 				playerY = BOARD_HEIGHT - 1;
 
-				// if(facesCount >= 20) {
-				//if (state == STATE_INIT) {
-					// GAME INITIALIZATION
-				//	level = 1;
-				//	score = 0;
-				//}
-				// if (state != STATE_NEW_GAME) {
-				// state = STATE_PLAYING;
-				// }
-				// }
+				if ((rocksCount >= MAX_ROCKS) && (facesCount >= MAX_FACES)) {
+					
+					gameState = STATE_PLAYING;				
+				}
+				
 			}
 
-			if ((rocksCount >= 65) && (facesCount >= 20)) {
-				state = STATE_PLAYING;
-			}
+			
 
 			/*****************************************************************
 			 * EVOLUTION
@@ -241,17 +240,7 @@ public class G extends JFrame {
 				System.exit(0);
 			}
 
-			if (key[KeyEvent.VK_ENTER]) {
-				if (state == STATE_NEW_GAME) {
-					state = STATE_INIT;
-				}
-				if (state == STATE_GAME_OVER) {
-					state = STATE_NEW_GAME;
-				}
-
-			}
-
-			if (state == STATE_GAME_OVER) {
+			if (gameState == STATE_GAME_OVER) {
 
 				if (score > bestScore) {
 					bestScore = score;
@@ -266,27 +255,22 @@ public class G extends JFrame {
 						}
 					}
 				}
+
 			}
 
-			if (state == STATE_PLAYING) {
-
-				// Player evolution
-				// if (key[KeyEvent.VK_UP]) { playerY -= PLAYER_SPEED; }
-				// if (key[KeyEvent.VK_DOWN]) { playerY += PLAYER_SPEED; }
+			if (gameState == STATE_PLAYING) {
 
 				if (key[KeyEvent.VK_LEFT] && !keyLock[KeyEvent.VK_LEFT]) {
-
 					playerX -= 1;
 					keyLock[KeyEvent.VK_LEFT] = true;
 				}
 
 				if (key[KeyEvent.VK_RIGHT] && !keyLock[KeyEvent.VK_RIGHT]) {
-
 					playerX += 1;
 					keyLock[KeyEvent.VK_RIGHT] = true;
 				}
 
-				if (stepCounter % speed == 0) {
+				if (stepCounter % playerSpeed == 0) {
 					playerY -= 1;
 				}
 
@@ -307,15 +291,7 @@ public class G extends JFrame {
 					playerX -= BOARD_WIDTH;
 				}
 
-				if (board[playerX][playerY] == TILE_ROCK) {
-
-					channel.noteOn(22, 80);
-					channel.noteOff(22);
-
-					state = STATE_GAME_OVER;
-					// state = STATE_NEW_GAME;
-				}
-
+				
 				if (board[playerX][playerY] == TILE_FACE_SAD) {
 
 					board[playerX][playerY] = TILE_NOTHING;
@@ -327,15 +303,35 @@ public class G extends JFrame {
 					channel.noteOff(60);
 
 					if (facesCount == 0) {
-						state = STATE_INIT;
+						gameState = STATE_LEVEL_INIT;
 					}
 				}
+				
+				if (board[playerX][playerY] == TILE_ROCK) {
+
+					channel.noteOn(22, 80);
+					channel.noteOff(22);
+
+					gameState = STATE_GAME_OVER;
+				}
+
+			}
+
+			if (key[KeyEvent.VK_ENTER]) {
+				
+				if (gameState == STATE_NEW_GAME) {
+					gameState = STATE_LEVEL_INIT;
+				}
+				if (gameState == STATE_GAME_OVER) {
+					gameState = STATE_NEW_GAME;
+				}
+
 			}
 
 			/******************************************************************
 			 * SCREEN UPDATE
 			 ******************************************************************/
-			g = (Graphics2D) strategy.getDrawGraphics();
+			g = (Graphics2D)strategy.getDrawGraphics();
 			g.translate(getInsets().left, getInsets().top);
 			g.drawImage(scenery, 0, 0, null);
 
@@ -359,22 +355,27 @@ public class G extends JFrame {
 					"Goblin4k -- Level: %02d(%02d faces) Score: %06d / %06d ",
 					level, facesCount, score, bestScore));
 
-			if (state == STATE_NEW_GAME) {
-				g.setColor(Color.red);
-				g.drawString("GAME OVER. Press 'Enter' To Start ", 140, 300);
-			}
-
-			if (state == STATE_GAME_OVER) {
-
-				g.setColor(new Color(0xaa000000));
+			if(gameState == STATE_NEW_GAME) {
+				g.setColor(new Color(0xBBABCDEF, true));
 				g.fillRect(0, (int) (getHeight() * 0.7), getWidth(), 30);
-				g.setColor(Color.WHITE);
-				String msg = "Game Over";
+				g.setColor(Color.BLACK);
+				String msg = "Goblin4k - Press ENTER to start";
 				g.setFont(new Font("sansserif", Font.BOLD, 14));
 				g.drawString(msg, (GAMEFILED_WIDTH - g.getFontMetrics()
 						.stringWidth(msg)) / 2, (int) (getHeight() * 0.7)
-						+ (30 - 14) / 2);
+						+ 14+(30 - 14) / 2);
+			}
 
+			if(gameState == STATE_GAME_OVER) {
+
+				g.setColor(new Color(0xBBABCDEF, true));
+				g.fillRect(0, (int) (getHeight() * 0.7), getWidth(), 30);
+				g.setColor(Color.BLACK);
+				String msg = "GAME OVER - Press ENTER to start";
+				g.setFont(new Font("sansserif", Font.BOLD, 14));
+				g.drawString(msg, (GAMEFILED_WIDTH - g.getFontMetrics()
+						.stringWidth(msg)) / 2, (int) (getHeight() * 0.7)
+						+ 14+(30 - 14) / 2);
 			}
 
 			strategy.show();
@@ -385,17 +386,17 @@ public class G extends JFrame {
 				Thread.sleep((nextFrameStart - System.nanoTime()) / 1000000);
 			} catch (Throwable t) {
 			}
-
 		}
 	}
 
 	protected void processKeyEvent(KeyEvent e) {
 
-		key[e.getKeyCode()] = e.getID() == KeyEvent.KEY_PRESSED;
+		key[e.getKeyCode()] = (e.getID() == KeyEvent.KEY_PRESSED);
 
 		if (e.getID() == KeyEvent.KEY_RELEASED) {
 			keyLock[e.getKeyCode()] = false;
 		}
+		
 	}
 
 	private static final void drawGoblin(Graphics2D g) {
