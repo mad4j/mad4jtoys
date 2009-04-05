@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jnlp spec="1.0" codebase="http://mad4jtoys.googlecode.com/">
+<information>
+  <title>Goblin4k</title>
+  <vendor>Daniele Olmisani (daniele.olmisani@gmail.com)</vendor>
+  <homepage href="http://code.google.com/p/mad4jtoys/" />
+  <description>Remake of an old Commodore Vic20 glorious game</description>
+</information>
+<offline-allowed/>
+<security/>
+<resources>
+  <j2se version="1.6" />
+  <jar href="/files/goblin4k-0.1.jar"/>
+</resources>
+<application-desc main-class="G" />
+</jnlp>
