@@ -12,10 +12,17 @@ import java.awt.event.KeyEvent;
 import java.awt.image.MemoryImageSource;
 
 import javax.swing.JFrame;
+import javax.vecmath.GMatrix;
 
+@SuppressWarnings("serial")
 public class JPong extends JFrame {
 
-	private static final long serialVersionUID = -6016934053312319564L;
+	
+	
+	private GameLogic gameLogic;
+		
+
+	
 
 	/*
 	 * Create the window and add the table.
@@ -27,7 +34,9 @@ public class JPong extends JFrame {
 		setSize(640, 480);
 		setResizable(false);
 
-		add(new GameLogic());
+		gameLogic = new GameLogic();
+		
+		add(gameLogic);
 
 		setLocationRelativeTo(null); // Center on screen
 
@@ -36,7 +45,7 @@ public class JPong extends JFrame {
 		GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment()
 				.getDefaultScreenDevice();
 
-		DisplayMode dm = new DisplayMode(720, 576, 32,
+		DisplayMode dm = new DisplayMode(640, 480, 32,
 				DisplayMode.REFRESH_RATE_UNKNOWN);
 
 		
@@ -53,6 +62,9 @@ public class JPong extends JFrame {
 					System.exit(0);
 				}
 				
+				if(e.getKeyCode() == KeyEvent.VK_C) {
+					gameLogic.switchColorTheme();
+				}
 				
 			}
 

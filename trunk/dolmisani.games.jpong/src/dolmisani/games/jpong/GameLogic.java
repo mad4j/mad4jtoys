@@ -20,10 +20,14 @@ import java.io.InputStream;
 import javax.swing.JPanel;
 import javax.swing.event.MouseInputAdapter;
 
+@SuppressWarnings("serial")
 public class GameLogic extends JPanel implements Runnable {
 	
-	
-	private static final long serialVersionUID = -677897566529512347L;
+	private ColorTheme[] THEMES = {
+			new ColorTheme(Color.BLACK, Color.WHITE),
+			new ColorTheme(Color.WHITE, Color.BLACK),
+			new ColorTheme(Color.WHITE, Color.ORANGE)
+	};
 	
 	private boolean gameStart; // Indicates if it is the start of the game
 	private boolean roundStart; // Indicates if it is the start of the round
@@ -37,6 +41,8 @@ public class GameLogic extends JPanel implements Runnable {
 	private Font pongFont; // Score font
 	private Thread animate; // Animation thread
 
+	private int activeThemeIntdex;
+	
 	
 	private AudioClip clip01;
 	private AudioClip clip02;
@@ -44,7 +50,11 @@ public class GameLogic extends JPanel implements Runnable {
 	
 	public GameLogic() {
 		
-		setBackground(Color.black); // Set Panel to black
+		
+		activeThemeIntdex = 0;
+		
+		//setBackground(activeTheme.getBackgroundColor()); // Set Panel to black
+		
 		setDoubleBuffered(true); // Double buffered for smooth animation
 		gameStart = true; // Set game to just started
 		roundStart = true; // Set round to just started
@@ -55,6 +65,8 @@ public class GameLogic extends JPanel implements Runnable {
 		cpuScore = 0; // Initialise the cpuScore
 		canvasWidth = 0; // Initialise canvasWidth
 		canvasHeight = 0; // Initialise canvasHeight
+		
+		
 		
 		
 		mouseListener mouseListener = new mouseListener(); // Create the mouse
@@ -111,10 +123,14 @@ public class GameLogic extends JPanel implements Runnable {
 	 */
 	public void paint(Graphics g) {
 		
+		ColorTheme activeTheme = THEMES[activeThemeIntdex % THEMES.length];
+		
+		setBackground(activeTheme.getBackgroundColor());
+		
 		super.paint(g); // Override the default paint method
 		
+		
 		Graphics2D g2 = (Graphics2D) g; // Use Graphics2D
-		g2.scale(1.0, 0.89);
 
 		// Get insets of Panel and reset drawing canvas inside insets
 		Insets insets = getInsets();
@@ -135,7 +151,7 @@ public class GameLogic extends JPanel implements Runnable {
 																			// minus
 																			// insets
 
-		g2.setColor(Color.white); // Paint components in gray
+		g2.setColor(activeTheme.getForegroundColor()); // Paint components in gray
 		g2.setStroke(new BasicStroke(5.0f, BasicStroke.CAP_BUTT,
 				BasicStroke.JOIN_MITER, 10.0f, new float[] { 10.0f }, 0.0f)); // Set
 																				// the
@@ -147,7 +163,7 @@ public class GameLogic extends JPanel implements Runnable {
 																		// center
 																		// line
 
-		g2.setColor(Color.white); // Paint components in white
+		g2.setColor(activeTheme.getForegroundColor()); // Paint components in white
 
 		if (gameStart) // Paint components in default positions if start of game
 		{
@@ -436,5 +452,12 @@ public class GameLogic extends JPanel implements Runnable {
 			startTime = System.currentTimeMillis(); // Get the current time in
 													// milliseconds
 		}
+	}
+
+	
+	public void switchColorTheme() {
+		
+		activeThemeIntdex++;
+		repaint();
 	}
 }
