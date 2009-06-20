@@ -12,7 +12,6 @@ import java.awt.event.KeyEvent;
 import java.awt.image.MemoryImageSource;
 
 import javax.swing.JFrame;
-import javax.vecmath.GMatrix;
 
 @SuppressWarnings("serial")
 public class JPong extends JFrame {
