@@ -43,6 +43,31 @@ public class GameObject {
 		return y;
 	}
 
+	public void setCenterX(int x) {
+		
+		this.x = x - width/2;
+	}
+	
+	public int getCenterX() {
+		
+		return x + width/2;
+	}
+	
+	public void setCenterY(int y) {
+		
+		this.y = y - height/2;
+	}
+	
+	public int getCenterY() {
+		
+		return y + height/2;
+	}
+	
+	public void setWidth(int width) {
+		
+		this.width = width;
+	}
+	
 	/*
 	 * Returns the current width.
 	 */
@@ -50,6 +75,11 @@ public class GameObject {
 		return width;
 	}
 
+	public void setHeight(int height) {
+		
+		this.height = height;
+	}
+	
 	/*
 	 * Returns the current height.
 	 */
@@ -87,6 +117,7 @@ public class GameObject {
 		this.deltaX = deltaX;
 	}
 
+		
 	public void draw(Graphics2D g) {
 
 		g.fillRect(x, y, width, height);

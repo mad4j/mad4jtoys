@@ -22,83 +22,79 @@ import javax.swing.event.MouseInputAdapter;
 
 @SuppressWarnings("serial")
 public class GameLogic extends JPanel implements Runnable {
-	
-	private ColorTheme[] THEMES = {
-			new ColorTheme(Color.BLACK, Color.WHITE),
+
+	private ColorTheme[] THEMES = { new ColorTheme(Color.BLACK, Color.WHITE),
 			new ColorTheme(Color.WHITE, Color.BLACK),
-			new ColorTheme(Color.WHITE, Color.ORANGE)
-	};
-	
+			new ColorTheme(Color.WHITE, Color.ORANGE) };
+
 	private boolean gameStart; // Indicates if it is the start of the game
 	private boolean roundStart; // Indicates if it is the start of the round
 	private GameObject ball; // The ball
+	private AIController aiController;
 	private GameObject playerPaddle; // The player's paddle
 	private GameObject cpuPaddle; // The cpu's paddle
+	private GameObject gameField;
 	private int playerScore; // The player's score
 	private int cpuScore; // The cpu score
-	private int canvasWidth; // The width of the visible canvas
-	private int canvasHeight; // The height of the visible canvas
+
 	private Font pongFont; // Score font
 	private Thread animate; // Animation thread
 
 	private int activeThemeIntdex;
-	
-	
+
 	private AudioClip clip01;
 	private AudioClip clip02;
 	private AudioClip clip03;
-	
+
 	public GameLogic() {
-		
-		
+
 		activeThemeIntdex = 0;
-		
-		//setBackground(activeTheme.getBackgroundColor()); // Set Panel to black
-		
+
+		// setBackground(activeTheme.getBackgroundColor()); // Set Panel to
+		// black
+
 		setDoubleBuffered(true); // Double buffered for smooth animation
 		gameStart = true; // Set game to just started
 		roundStart = true; // Set round to just started
+
 		ball = new GameObject(0, 0, 14, 14); // Create the ball
+
 		playerPaddle = new GameObject(0, 0, 10, 80); // Create the player paddle
 		cpuPaddle = new GameObject(0, 0, 10, 80); // Create the cpu paddle
+		aiController = new AIController(cpuPaddle, this);
 		playerScore = 0; // Initialise the playerScore
 		cpuScore = 0; // Initialise the cpuScore
-		canvasWidth = 0; // Initialise canvasWidth
-		canvasHeight = 0; // Initialise canvasHeight
-		
-		
-		
-		
+
+		gameField = new GameObject(0, 0, 0, 0);
+
 		mouseListener mouseListener = new mouseListener(); // Create the mouse
-					
-		
+
 		// listener
 		addMouseListener(mouseListener); // Add the mouse listener to the panel
 		addMouseMotionListener(mouseListener); // Add mouse motion listener to
-												// the panel
-		
+		// the panel
+
 		addMouseWheelListener(mouseListener);
-		
-		
 
 		try {
 			InputStream fontStream = GameLogic.class
-					.getResourceAsStream("resources/pong.ttf"); // Read in PONG.TTF from
-														// jar
+					.getResourceAsStream("resources/pong.ttf"); // Read in
+																// PONG.TTF from
+			// jar
 			Font onePoint = Font.createFont(Font.TRUETYPE_FONT, fontStream); // Setup
-																				// onePoint
-																				// using
-																				// PONG.TTF
+			// onePoint
+			// using
+			// PONG.TTF
 			fontStream.close(); // Close the InputStream
 			pongFont = onePoint.deriveFont(Font.PLAIN, 60); // Format pongFont
-				
-			
-			clip01 = Applet.newAudioClip(GameLogic.class.getResource("resources/sample01.wav"));
-			clip02 = Applet.newAudioClip(GameLogic.class.getResource("resources/sample02.wav"));
-			clip03 = Applet.newAudioClip(GameLogic.class.getResource("resources/sample03.wav"));
-			
-			
-			
+
+			clip01 = Applet.newAudioClip(GameLogic.class
+					.getResource("resources/sample01.wav"));
+			clip02 = Applet.newAudioClip(GameLogic.class
+					.getResource("resources/sample02.wav"));
+			clip03 = Applet.newAudioClip(GameLogic.class
+					.getResource("resources/sample03.wav"));
+
 		} catch (IOException e) // Catch Input Exception
 		{
 			System.err.println("ERR: IOException - Cannot read file PONG.TTF");
@@ -116,157 +112,110 @@ public class GameLogic extends JPanel implements Runnable {
 		animate = new Thread(this); // Create the thread
 		animate.start(); // Start the thread
 	}
-	
 
 	/*
 	 * Paints the components on the panel
 	 */
 	public void paint(Graphics g) {
-		
+
 		ColorTheme activeTheme = THEMES[activeThemeIntdex % THEMES.length];
-		
+
 		setBackground(activeTheme.getBackgroundColor());
-		
+
 		super.paint(g); // Override the default paint method
-		
-		
+
 		Graphics2D g2 = (Graphics2D) g; // Use Graphics2D
 
 		// Get insets of Panel and reset drawing canvas inside insets
 		Insets insets = getInsets();
-				
+
 		g2.translate(insets.left, insets.top);
 
 		Dimension size = getSize(); // Get dimensions of Panel
-		canvasWidth = (int) size.getWidth() - insets.left - insets.right; // Get
-																			// width
-																			// of
-																			// canvas
-																			// minus
-																			// insets
-		canvasHeight = (int) size.getHeight() - insets.top - insets.bottom; // Get
-																			// height
-																			// of
-																			// canvas
-																			// minus
-																			// insets
 
-		g2.setColor(activeTheme.getForegroundColor()); // Paint components in gray
+		gameField.setWidth((int) size.getWidth() - insets.left - insets.right);
+		gameField
+				.setHeight((int) size.getHeight() - insets.top - insets.bottom);
+
+		g2.setColor(activeTheme.getForegroundColor()); // Paint components in
+														// gray
 		g2.setStroke(new BasicStroke(5.0f, BasicStroke.CAP_BUTT,
-				BasicStroke.JOIN_MITER, 10.0f, new float[] { 10.0f }, 0.0f)); // Set
-																				// the
-																				// stroke
-																				// to
-																				// dash
-		g2.drawLine(canvasWidth / 2, 0, canvasWidth / 2, canvasHeight); // Draw
-																		// the
-																		// center
-																		// line
+				BasicStroke.JOIN_MITER, 10.0f, new float[] { 10.0f }, 0.0f)); 
+		g2.drawLine(gameField.getCenterX(), gameField.getY(), gameField
+				.getCenterX(), gameField.getHeight());
 
-		g2.setColor(activeTheme.getForegroundColor()); // Paint components in white
-
+		g2.setColor(activeTheme.getForegroundColor()); // Paint components in
+														// white
 		if (gameStart) // Paint components in default positions if start of game
 		{
-			ball.setX((canvasWidth / 2) - (ball.getWidth() / 2)); // Position
-																	// ball in
-																	// middle of
-																	// x axis
-			ball.setY((canvasHeight / 2) - (ball.getHeight() / 2)); // Position
-																	// ball in
-																	// middle of
-																	// y axis
+
+			ball.setCenterX(gameField.getCenterX());
+			ball.setCenterY(gameField.getCenterY());
+
 			ball.setDeltaX(-4); // Set the speed of ball in the x direction
 			ball.setDeltaY(-2); // Set the speed of the ball in the y direction
 
-			playerPaddle.setX(10); // Set the x position of the playerPaddle
-			playerPaddle.setY((canvasHeight / 2)
-					- (playerPaddle.getHeight() / 2)); // Set the y position of
-														// the playerPaddle
+			playerPaddle.setX(gameField.getX() + 2 * playerPaddle.getWidth());
+			playerPaddle.setCenterY(gameField.getCenterY());
 
 			playerPaddle.setDeltaX(0);
 			playerPaddle.setDeltaY(0);
-			
-			cpuPaddle.setX(canvasWidth - (cpuPaddle.getWidth() * 2)); // Set the
-																		// x
-																		// position
-																		// of
-																		// the
-																		// cpuPaddle
-			cpuPaddle.setY((canvasHeight / 2) - (playerPaddle.getHeight() / 2)); // Set
-																					// the
-																					// y
-																					// position
-																					// of
-																					// the
-																					// cpuPaddle
+
+			cpuPaddle.setX(gameField.getWidth() - 2 * cpuPaddle.getWidth());
+			cpuPaddle.setCenterY(gameField.getCenterY());
 
 			Font font = new Font("SansSerif", Font.BOLD, 12); // Set the font
 			g2.setFont(font); // Use the new font
 			FontMetrics defaultMetrics = g2.getFontMetrics(); // Get the metrics
-																// of the font
+			// of the font
 			// Get the width of the strings
 			int instructionWidth = defaultMetrics.stringWidth("Click to start");
 			int instructionWidth2 = defaultMetrics
 					.stringWidth("Move mouse to move paddle");
 			int defaultFontHeight = defaultMetrics.getHeight(); // Get the
-																// height of the
-																// font
+			// height of the
+			// font
 			// Draw the strings
-			g2.drawString("Click to start", (canvasWidth / 2)
-					- (instructionWidth / 2), (canvasHeight / 2)
+			g2.drawString("Click to start", gameField.getCenterX()
+					- (instructionWidth / 2), gameField.getCenterY()
 					- defaultFontHeight - (ball.getHeight() * 2));
-			g2.drawString("Move mouse to move paddle", (canvasWidth / 2)
-					- (instructionWidth2 / 2), (canvasHeight / 2)
+			g2.drawString("Move mouse to move paddle", gameField.getCenterX()
+					- (instructionWidth2 / 2), gameField.getCenterY()
 					- (ball.getHeight() * 2));
 		}
 
 		if (roundStart) // Re-center if start of the round
 		{
-			ball.setX((canvasWidth / 2) - (ball.getWidth() / 2)); // Position
-																	// ball in
-																	// middle of
-																	// x axis
-			ball.setY((canvasHeight / 2) - (ball.getHeight() / 2)); // Position
-																	// ball in
-																	// middle of
-																	// y axis
-			playerPaddle.setY((canvasHeight / 2)
-					- (playerPaddle.getHeight() / 2)); // Position the
-														// playerPaddle in
-														// middle of y axis
-			
+			ball.setCenterX(gameField.getCenterX());
+			ball.setCenterY(gameField.getCenterY());
+
+			playerPaddle.setCenterY(gameField.getCenterY());
+
 			playerPaddle.setDeltaX(0);
 			playerPaddle.setDeltaY(0);
-			
-			cpuPaddle.setY((canvasHeight / 2) - (playerPaddle.getHeight() / 2)); // Position
-																					// the
-																					// cpuPaddle
-																					// in
-																					// middle
-																					// of
-																					// y
-																					// axis
+
+			cpuPaddle.setCenterY(gameField.getCenterY());
 		}
 
 		ball.draw(g2);
 		playerPaddle.draw(g2);
 		cpuPaddle.draw(g2);
 
-
 		g2.setFont(pongFont); // Use pongFont
 		FontMetrics pongMetrics = g2.getFontMetrics(); // Get the metrics for
-														// pongFont
+		// pongFont
 		// Get the width of the score strings
 		int playerScoreWidth = pongMetrics.stringWidth(Integer
 				.toString(playerScore));
 		int cpuScoreWidth = pongMetrics.stringWidth(Integer.toString(cpuScore));
 		int pongFontHeight = pongMetrics.getHeight(); // Get the height of the
-														// font.
-		g2.drawString(Integer.toString(playerScore), (canvasWidth / 3)
+		// font.
+		g2.drawString(Integer.toString(playerScore), (gameField.getWidth() / 3)
 				- (playerScoreWidth / 2), pongFontHeight); // Draw the player's
-															// score
-		g2.drawString(Integer.toString(cpuScore), ((canvasWidth / 3) * 2)
-				- (cpuScoreWidth / 2), pongFontHeight); // Draw the cpu's score
+		// score
+		g2.drawString(Integer.toString(cpuScore),
+				((gameField.getWidth() / 3) * 2) - (cpuScoreWidth / 2),
+				pongFontHeight); // Draw the cpu's score
 
 		// Sync with toolkit (Linux) and clean up
 		Toolkit.getDefaultToolkit().sync();
@@ -274,67 +223,22 @@ public class GameLogic extends JPanel implements Runnable {
 	}
 
 	public class mouseListener extends MouseInputAdapter {
-		
+
+		@Override
 		public void mouseReleased(MouseEvent e) // Mouse button clicked
 		{
 			gameStart = false; // Set game to started
 			roundStart = false; // Start round
 		}
 
-		public void mouseMoved(MouseEvent e) // Mouse moved
-		{
-				
-			//playerPaddle.setY(e.getY() - (playerPaddle.getHeight() / 2)); // Move
-																			// playerPaddle
-		}
-
-		public void mouseDragged(MouseEvent e) // Mouse dragged
-		{
-			//playerPaddle.setY(e.getY() - (playerPaddle.getHeight() / 2)); // Move
-																			// playerPaddle
-		}
-
 		@Override
 		public void mouseWheelMoved(MouseWheelEvent e) {
-			
-			playerPaddle.setDeltaY(playerPaddle.getDeltaY()+e.getWheelRotation());
-			
-		}
-		
-		
-		
-		
-	}
 
-	public void cpuPaddleMove() {
-		if (ball.getDeltaX() < 0) // If ball is travelling away from cpuPaddle
-		{
-			// Center paddle
-			if ((cpuPaddle.getY() + cpuPaddle.getHeight() / 2) < (canvasHeight / 2)) {
-				cpuPaddle.setY(cpuPaddle.getY() + 3);
-			}
-			if ((cpuPaddle.getY() + cpuPaddle.getHeight() / 2) > (canvasHeight / 2)) {
-				cpuPaddle.setY(cpuPaddle.getY() - 3);
-			}
+			playerPaddle.setDeltaY(playerPaddle.getDeltaY()
+					+ e.getWheelRotation());
+
 		}
-		if (ball.getDeltaX() > 0) // If ball is travelling toward cpuPaddle
-		{
-			// Distance between ball and middle of cpuPaddle vertically
-			int dist = Math.abs(ball.getY()
-					- (cpuPaddle.getY() + cpuPaddle.getHeight() / 2));
-			/*
-			 * Move the paddle toward the ball at a speed of dist / 8 Changing
-			 * the division changes the difficulty of the cpu
-			 */
-			if ((ball.getY() + ball.getHeight() / 2) < (cpuPaddle.getY() + cpuPaddle
-					.getHeight() / 2)) {
-				cpuPaddle.setY(cpuPaddle.getY() - dist / 8);
-			}
-			if ((ball.getY() + ball.getHeight() / 2) > (cpuPaddle.getY() + cpuPaddle
-					.getHeight() / 2)) {
-				cpuPaddle.setY(cpuPaddle.getY() + dist / 8);
-			}
-		}
+
 	}
 
 	public void collisionDetect() {
@@ -342,23 +246,24 @@ public class GameLogic extends JPanel implements Runnable {
 		 * Check if ball hit the left or right sides Reset the y direction of
 		 * the ball Increase relevant score and set the round to start
 		 */
-		if (ball.getX() >= canvasWidth + ball.getWidth() * 2) {
+		if (ball.getX() >= gameField.getWidth() + ball.getWidth() * 2) {
 			playerScore += 1;
 			ball.setDeltaY(-2);
-		
+
 			roundStart = true;
 			clip03.play();
 		}
 		if (ball.getX() <= ball.getWidth() * -2) {
 			cpuScore += 1;
 			ball.setDeltaY(-2);
-			
+
 			roundStart = true;
 			clip03.play();
 		}
 
 		// Check if ball hit the top or bottom and invert the y direction
-		if (ball.getY() + ball.getHeight() >= canvasHeight || ball.getY() <= 0) {
+		if (ball.getY() + ball.getHeight() >= gameField.getHeight()
+				|| ball.getY() <= 0) {
 			ball.setDeltaY(ball.getDeltaY() * -1);
 			clip01.play();
 		}
@@ -377,7 +282,7 @@ public class GameLogic extends JPanel implements Runnable {
 				ball.setDeltaY(ball.getDeltaY() + playerDist / 28);
 				// Invert x direction of ball
 				ball.setDeltaX(ball.getDeltaX() * -1);
-				
+
 				clip02.play();
 			}
 
@@ -394,7 +299,7 @@ public class GameLogic extends JPanel implements Runnable {
 				ball.setDeltaY(ball.getDeltaY() + cpuDist / 28);
 				// Invert x direction of ball
 				ball.setDeltaX(ball.getDeltaX() * -1);
-				
+
 				clip02.play();
 			}
 	}
@@ -405,28 +310,30 @@ public class GameLogic extends JPanel implements Runnable {
 		long sleep; // Amount of time to sleep
 
 		startTime = System.currentTimeMillis(); // Get the current time in
-												// milliseconds
+		// milliseconds
 
 		while (true) // Endless loop
 		{
 			if (!roundStart && !gameStart) // If not the start of round or game
 			{
-				
+
 				playerPaddle.move();
-				
-				if((playerPaddle.getY() + playerPaddle.getHeight() / 2) < 0) {
-					playerPaddle.setY( - playerPaddle.getHeight() /2);
+
+				if ((playerPaddle.getCenterY()) < gameField.getY()) {
+					playerPaddle.setCenterY(gameField.getY());
 					playerPaddle.setDeltaY(0);
 				}
-				
-				if((playerPaddle.getY()  + playerPaddle.getHeight() / 2) > canvasHeight) {
-					playerPaddle.setY(canvasHeight - playerPaddle.getHeight() / 2);
+
+				if ((playerPaddle.getCenterY()) > gameField.getHeight()) {
+					playerPaddle.setCenterY(gameField.getHeight());
 					playerPaddle.setDeltaY(0);
 				}
-				
-				
+
 				ball.move(); // Move the ball
-				cpuPaddleMove(); // Move cpu paddle
+
+				// cpuPaddleMove(); // Move cpu paddle
+				aiController.control();
+
 				collisionDetect(); // Detect collisions
 				repaint(); // Repaint everything
 			}
@@ -446,18 +353,28 @@ public class GameLogic extends JPanel implements Runnable {
 			{
 				Thread.sleep(sleep);
 			} catch (InterruptedException e) {
-				
+
 			}
 
 			startTime = System.currentTimeMillis(); // Get the current time in
-													// milliseconds
+			// milliseconds
 		}
 	}
 
-	
 	public void switchColorTheme() {
-		
+
 		activeThemeIntdex++;
 		repaint();
 	}
+
+	public GameObject getBallObject() {
+
+		return ball;
+	}
+
+	public GameObject getGameFieldObject() {
+
+		return gameField;
+	}
+
 }
