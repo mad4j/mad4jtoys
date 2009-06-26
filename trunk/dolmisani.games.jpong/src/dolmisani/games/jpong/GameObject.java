@@ -3,6 +3,7 @@ package dolmisani.games.jpong;
 import java.awt.Graphics2D;
 
 
+
 public class GameObject {
 
 	protected int x;
@@ -127,6 +128,18 @@ public class GameObject {
 
 		this.x += this.deltaX;
 		this.y += this.deltaY;
+	}
+	
+	public boolean detectCollision(GameObject gameObject) {
+		
+		return contains(gameObject.getCenterX(), gameObject.getCenterY());
+		
+	}
+	
+	public boolean contains(int pX, int pY) {
+		
+		return (x < pX) && (pX < x+width ) && (y < pY) && (pY < y+height);
+		
 	}
 	
 }
