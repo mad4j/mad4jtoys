@@ -32,7 +32,7 @@ public class GameLogic extends JPanel implements Runnable {
 	private GameObject ball; // The ball
 	private AIController aiController;
 	private GameObject playerPaddle; // The player's paddle
-	private GameObject cpuPaddle; // The cpu's paddle
+	private GameObject computerPaddle; // The cpu's paddle
 	private GameObject gameField;
 	private int playerScore; // The player's score
 	private int cpuScore; // The cpu score
@@ -60,8 +60,8 @@ public class GameLogic extends JPanel implements Runnable {
 		ball = new GameObject(0, 0, 14, 14); // Create the ball
 
 		playerPaddle = new GameObject(0, 0, 10, 80); // Create the player paddle
-		cpuPaddle = new GameObject(0, 0, 10, 80); // Create the cpu paddle
-		aiController = new AIController(cpuPaddle, this);
+		computerPaddle = new GameObject(0, 0, 10, 80); // Create the cpu paddle
+		aiController = new AIController(computerPaddle, this);
 		playerScore = 0; // Initialise the playerScore
 		cpuScore = 0; // Initialise the cpuScore
 
@@ -79,7 +79,7 @@ public class GameLogic extends JPanel implements Runnable {
 		try {
 			InputStream fontStream = GameLogic.class
 					.getResourceAsStream("resources/pong.ttf"); // Read in
-																// PONG.TTF from
+			// PONG.TTF from
 			// jar
 			Font onePoint = Font.createFont(Font.TRUETYPE_FONT, fontStream); // Setup
 			// onePoint
@@ -138,14 +138,14 @@ public class GameLogic extends JPanel implements Runnable {
 				.setHeight((int) size.getHeight() - insets.top - insets.bottom);
 
 		g2.setColor(activeTheme.getForegroundColor()); // Paint components in
-														// gray
+		// gray
 		g2.setStroke(new BasicStroke(5.0f, BasicStroke.CAP_BUTT,
-				BasicStroke.JOIN_MITER, 10.0f, new float[] { 10.0f }, 0.0f)); 
+				BasicStroke.JOIN_MITER, 10.0f, new float[] { 10.0f }, 0.0f));
 		g2.drawLine(gameField.getCenterX(), gameField.getY(), gameField
 				.getCenterX(), gameField.getHeight());
 
 		g2.setColor(activeTheme.getForegroundColor()); // Paint components in
-														// white
+		// white
 		if (gameStart) // Paint components in default positions if start of game
 		{
 
@@ -161,8 +161,9 @@ public class GameLogic extends JPanel implements Runnable {
 			playerPaddle.setDeltaX(0);
 			playerPaddle.setDeltaY(0);
 
-			cpuPaddle.setX(gameField.getWidth() - 2 * cpuPaddle.getWidth());
-			cpuPaddle.setCenterY(gameField.getCenterY());
+			computerPaddle.setX(gameField.getWidth() - 2
+					* computerPaddle.getWidth());
+			computerPaddle.setCenterY(gameField.getCenterY());
 
 			Font font = new Font("SansSerif", Font.BOLD, 12); // Set the font
 			g2.setFont(font); // Use the new font
@@ -194,12 +195,12 @@ public class GameLogic extends JPanel implements Runnable {
 			playerPaddle.setDeltaX(0);
 			playerPaddle.setDeltaY(0);
 
-			cpuPaddle.setCenterY(gameField.getCenterY());
+			computerPaddle.setCenterY(gameField.getCenterY());
 		}
 
 		ball.draw(g2);
 		playerPaddle.draw(g2);
-		cpuPaddle.draw(g2);
+		computerPaddle.draw(g2);
 
 		g2.setFont(pongFont); // Use pongFont
 		FontMetrics pongMetrics = g2.getFontMetrics(); // Get the metrics for
@@ -246,62 +247,53 @@ public class GameLogic extends JPanel implements Runnable {
 		 * Check if ball hit the left or right sides Reset the y direction of
 		 * the ball Increase relevant score and set the round to start
 		 */
-		if (ball.getX() >= gameField.getWidth() + ball.getWidth() * 2) {
+		if (ball.getCenterX() > gameField.getWidth()) {
 			playerScore += 1;
-			ball.setDeltaY(-2);
+			// ball.setDeltaY(-2);
 
 			roundStart = true;
 			clip03.play();
 		}
-		if (ball.getX() <= ball.getWidth() * -2) {
+		if (ball.getCenterX() < gameField.getX()) {
 			cpuScore += 1;
-			ball.setDeltaY(-2);
+			// ball.setDeltaY(-2);
 
 			roundStart = true;
 			clip03.play();
 		}
 
 		// Check if ball hit the top or bottom and invert the y direction
-		if (ball.getY() + ball.getHeight() >= gameField.getHeight()
+		if (ball.getY() + ball.getHeight() > gameField.getHeight()
 				|| ball.getY() <= 0) {
-			ball.setDeltaY(ball.getDeltaY() * -1);
+			ball.setDeltaY(-ball.getDeltaY());
 			clip01.play();
 		}
 
 		// Check if ball hit the playerPaddle and change y and x direction
-		if (ball.getX() + ball.getDeltaX() < playerPaddle.getX()
-				+ (ball.getWidth() / 2)
-				&& ball.getX() >= playerPaddle.getX())
-			if (ball.getY() + ball.getHeight() >= playerPaddle.getY()
-					&& ball.getY() <= playerPaddle.getY()
-							+ playerPaddle.getHeight()) {
-				// Distance between middle of playerPaddle and ball vertically
-				int playerDist = ball.getY() - playerPaddle.getY()
-						+ (playerPaddle.getHeight() / 2);
-				// Set y direction of ball
-				ball.setDeltaY(ball.getDeltaY() + playerDist / 28);
-				// Invert x direction of ball
-				ball.setDeltaX(ball.getDeltaX() * -1);
 
-				clip02.play();
-			}
+		if (playerPaddle.detectCollision(ball)) {
+
+			// Distance between middle of playerPaddle and ball vertically
+			int playerDist = ball.getCenterY() - playerPaddle.getCenterY();
+			// Set y direction of ball
+			ball.setDeltaY(ball.getDeltaY() + playerDist / 28);
+			// Invert x direction of ball
+			ball.setDeltaX(-ball.getDeltaX());
+
+			clip02.play();
+		}
 
 		// Check if ball hit the cpuPaddle and change y and x direction
-		if (ball.getX() + ball.getDeltaX() > cpuPaddle.getX()
-				- cpuPaddle.getWidth()
-				&& ball.getX() <= cpuPaddle.getX())
-			if (ball.getY() + ball.getWidth() >= cpuPaddle.getY()
-					&& ball.getY() <= cpuPaddle.getY() + cpuPaddle.getHeight()) {
-				// Distance between middle of cpuPaddle and ball vertically
-				int cpuDist = ball.getY() - cpuPaddle.getY()
-						+ (cpuPaddle.getHeight() / 2);
-				// Set y direction of ball
-				ball.setDeltaY(ball.getDeltaY() + cpuDist / 28);
-				// Invert x direction of ball
-				ball.setDeltaX(ball.getDeltaX() * -1);
+		if (computerPaddle.detectCollision(ball)) {
+			// Distance between middle of cpuPaddle and ball vertically
+			int cpuDist = ball.getCenterY() - computerPaddle.getCenterY();
+			// Set y direction of ball
+			ball.setDeltaY(ball.getDeltaY() + cpuDist / 28);
+			// Invert x direction of ball
+			ball.setDeltaX(-ball.getDeltaX());
 
-				clip02.play();
-			}
+			clip02.play();
+		}
 	}
 
 	public void run() {
