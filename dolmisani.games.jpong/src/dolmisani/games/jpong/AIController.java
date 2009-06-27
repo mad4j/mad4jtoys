@@ -32,8 +32,11 @@ public class AIController extends AbstractController {
 			int distance = ballObject.getCenterY() - gameObject.getCenterY();
 			
 			gameObject.setY(gameObject.getY() + distance / 8);
+			//gameObject.setDeltaY(gameObject.getDeltaY() + ((distance >0) ? 1 : -1));
 						
-		}		
+		}
+		
+		//gameObject.move();
 	}
 
 }

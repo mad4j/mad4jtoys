@@ -13,11 +13,11 @@ public class ColorTheme {
 		this.foreground = foreground;
 	}
 	
-	
 	public Color getBackgroundColor() {
 		
 		return background;
 	}
+	
 	public Color getForegroundColor() {
 		
 		return foreground;

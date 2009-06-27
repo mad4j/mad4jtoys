@@ -34,6 +34,7 @@ public class GameLogic extends JPanel implements Runnable {
 	private GameObject playerPaddle; // The player's paddle
 	private GameObject computerPaddle; // The cpu's paddle
 	private GameObject gameField;
+	
 	private int playerScore; // The player's score
 	private int cpuScore; // The cpu score
 
@@ -50,8 +51,7 @@ public class GameLogic extends JPanel implements Runnable {
 
 		activeThemeIntdex = 0;
 
-		// setBackground(activeTheme.getBackgroundColor()); // Set Panel to
-		// black
+		// setBackground(activeTheme.getBackgroundColor()); 
 
 		setDoubleBuffered(true); // Double buffered for smooth animation
 		gameStart = true; // Set game to just started
@@ -67,6 +67,8 @@ public class GameLogic extends JPanel implements Runnable {
 
 		gameField = new GameObject(0, 0, 0, 0);
 
+		
+		
 		mouseListener mouseListener = new mouseListener(); // Create the mouse
 
 		// listener
@@ -81,10 +83,7 @@ public class GameLogic extends JPanel implements Runnable {
 					.getResourceAsStream("resources/pong.ttf"); // Read in
 			// PONG.TTF from
 			// jar
-			Font onePoint = Font.createFont(Font.TRUETYPE_FONT, fontStream); // Setup
-			// onePoint
-			// using
-			// PONG.TTF
+			Font onePoint = Font.createFont(Font.TRUETYPE_FONT, fontStream); 
 			fontStream.close(); // Close the InputStream
 			pongFont = onePoint.deriveFont(Font.PLAIN, 60); // Format pongFont
 
@@ -102,6 +101,7 @@ public class GameLogic extends JPanel implements Runnable {
 		{
 			System.err.println("ERR: FontFormatException");
 		}
+		
 	}
 
 	/*
@@ -126,6 +126,8 @@ public class GameLogic extends JPanel implements Runnable {
 
 		Graphics2D g2 = (Graphics2D) g; // Use Graphics2D
 
+		//g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+		
 		// Get insets of Panel and reset drawing canvas inside insets
 		Insets insets = getInsets();
 
@@ -249,14 +251,14 @@ public class GameLogic extends JPanel implements Runnable {
 		 */
 		if (ball.getCenterX() > gameField.getWidth()) {
 			playerScore += 1;
-			// ball.setDeltaY(-2);
+			ball.setDeltaY(-2);
 
 			roundStart = true;
 			clip03.play();
 		}
 		if (ball.getCenterX() < gameField.getX()) {
 			cpuScore += 1;
-			// ball.setDeltaY(-2);
+			ball.setDeltaY(-2);
 
 			roundStart = true;
 			clip03.play();
@@ -359,6 +361,14 @@ public class GameLogic extends JPanel implements Runnable {
 		repaint();
 	}
 
+	public void resetScores() {
+		
+		playerScore = 0;
+		cpuScore = 0;
+		
+		repaint();
+	}
+	
 	public GameObject getBallObject() {
 
 		return ball;
