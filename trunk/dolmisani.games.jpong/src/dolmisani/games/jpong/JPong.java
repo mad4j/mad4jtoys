@@ -65,6 +65,10 @@ public class JPong extends JFrame {
 					gameLogic.switchColorTheme();
 				}
 				
+				if(e.getKeyCode() == KeyEvent.VK_R) {
+					gameLogic.resetScores();
+				}
+				
 			}
 
 		});
