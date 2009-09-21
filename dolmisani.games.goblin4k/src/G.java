@@ -18,18 +18,78 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+
+/*
+ * Original Code
+ * --------------------------------------------------------------------------
+ * 90 REM**COMPUTE JULY**
+ * 100 PRINT"{CLR}":POKE52,28:POKE56,28:CLR:POKE36869,255:POKE36879,26
+ * 110 IFS>HSTHENHS=S
+ * 115 RESTORE:B=230:Z=8152:Z1=Z+30720:W=0:S=J:G=0
+ * 120 FORX=1TO32:READA:POKEX+7167,A:NEXT:FORX=1TO8:READA:POKEX+7423,A:NEXT
+ * 130 PRINT"{CLR}{RVS ON}{GRN}{RIGHT}{RIGHT}{RIGHT}{RIGHT}{RIGHT}G O B L I N"
+ * 140 PRINT"{HOME}{RED}{DOWN}{DOWN}"SPC(12)"{RVS ON}HS="HS:PRINT"{HOME}{RVS ON}{BLK}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}O=LEFT{RIGHT}{RIGHT}{RIGHT}{RIGHT}{RIGHT}{RIGHT}{RIGHT}{RIGHT}{RIGHT}P=RIGHT"
+ * 150 FORI=1TO65
+ * 160 X=INT(RND(1)*330)+7746
+ * 170 IFPEEK(X)=BTHEN160
+ * 180 POKEX,B:POKEX+30720,0:NEXTI
+ * 190 FORI=1TO20
+ * 200 X=INT(RND(1)*330)+7746
+ * 210 IFPEEK(X)=BORPEEK(X)=1ORPEEK(X)=3THEN200
+ * 220 IFPEEK(X+21)=BANDPEEK(X+22)=BANDPEEK(X+23)=BTHENPOKEX,3:POKEX+30720,0:G=G+1:GOTO240
+ * 230 POKEX,1:POKEX+30720,0
+ * 240 NEXTI
+ * 250 POKEZ,32:Z=Z-22:Z1=Z1-22:IFZ<7746THENZ=Z+374:Z1=Z1+374
+ * 260 GETA$:IFA$="O"THENZ=Z-1:Z1=Z1-1
+ * 270 IFA$="P"THENZ=Z+1:Z1=Z1+1
+ * 280 IFPEEK(Z)=BTHEN410
+ * 290 IFPEEK(Z)=1THENGOSUB330
+ * 300 POKEZ,0:POKEZ1,0:FORT=1TO220:NEXT
+ * 310 IFW=20-GTHENJ=S:GOSUB350:GOTO110
+ * 320 GOTO250
+ * 330 W=W+1:S=S+25:PRINT"{HOME}{BLU}{DOWN}{DOWN}{RVS ON}"S:POKE36878,15
+ * 340 FORT=235TO250:POKE36876,T:NEXT:POKE36876,0:RETURN
+ * 350 PRINT"{HOME}{RED}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{RVS ON}******ALL RIGHT!******"
+ * 355 FORI=1TO10:GETA$:NEXTI:REM COLLECT GARBAGE
+ * 360 FORI=1TO25
+ * 370 X=INT(RND(1)*15)+233
+ * 380 POKE36878,15:POKE36875,X
+ * 390 FORT=1TO30:NEXTT:NEXTI
+ * 400 POKE36878,0:POKE36875,0:RETURN
+ * 410 POKE36877,200:FORV=15TO0STEP-1:POKE36878,V:NEXT:POKE36877,0:POKEZ,2
+ * 420 FORX=7746TO8075:IFPEEK(X)<>1THENNEXTX
+ * 430 IFPEEK(X)=1THENPOKEX,3:NEXTX
+ * 440 J=0
+ * 445 FORI=1TO10:GETC$:NEXTI
+ * 450 PRINT"{HOME}{BLU}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{RIGHT}{RVS ON}PLAY AGAIN ? (Y/N)"
+ * 465 GETC$:IFC$=""THEN465
+ * 470 IFC$="Y"THEN110
+ * 490 POKE36869,240:POKE36879,27:POKE52,30:POKE56,30:PRINT"{CLR}SEE YA!"
+ * 500 DATA126,219,219,255,165,90,90,165,60,66,165,129,153,165,66,60
+ * 510 DATA170,85,170,85,126,219,255,189,60,66,165,129,165,153,66,60
+ * 520 DATA0,0,0,0,0,0,0,0
+ */
+
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.event.KeyEvent;
 import java.awt.image.BufferStrategy;
-import java.awt.image.BufferedImage; 
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+
 import javax.sound.midi.MidiChannel;
 import javax.sound.midi.MidiSystem;
 import javax.sound.midi.Patch;
 import javax.sound.midi.Synthesizer;
 import javax.swing.JFrame;
+
+import sun.audio.AudioPlayer;
 
 /**
  *  Goblin4k is a remake of glorious game of the Commodore Vic20.
@@ -50,7 +110,7 @@ public class G extends JFrame {
 	private static final int BOARD_WIDTH = 32;
 	private static final int BOARD_HEIGHT = 24;
 
-	private static final int PIXEL_SIZE = 2;
+	private static final int PIXEL_SIZE = 3;
 	private static final int TILE_SIZE = 8 * PIXEL_SIZE;
 
 	private static final int GAMEFILED_WIDTH = BOARD_WIDTH * TILE_SIZE;
@@ -70,6 +130,11 @@ public class G extends JFrame {
 	private boolean key[] = new boolean[65535];
 	private boolean keyLock[] = new boolean[65535];
 
+	
+	private InputStream tone1;
+	
+	
+	
 	public static void main(String[] args) {
 		new G();
 	}
@@ -145,6 +210,10 @@ public class G extends JFrame {
 		} catch (Exception e) {
 		}
 
+		
+		tone1 = createSample();
+		
+		
 	
 
 		// TODO : Scenery
@@ -299,9 +368,15 @@ public class G extends JFrame {
 
 					score += 100;
 
+					/*
 					channel.noteOn(60, 50);
 					channel.noteOff(60);
-
+					*/
+		
+				
+					AudioPlayer.player.start(tone1);
+				
+		
 					if (facesCount == 0) {
 						gameState = STATE_LEVEL_INIT;
 					}
@@ -447,8 +522,7 @@ public class G extends JFrame {
 		g.setColor(Color.ORANGE);
 
 		g.fillRect(1 * PIXEL_SIZE, 1 * PIXEL_SIZE, 6 * PIXEL_SIZE,
-				6 * PIXEL_SIZE);
-
+				6 * PIXEL_SIZE);		
 	}
 
 	private static final void drawFace(Graphics2D g, boolean happinessFlag) {
@@ -495,4 +569,41 @@ public class G extends JFrame {
 
 	}
 
+	
+	private static final InputStream createSample() {
+		
+		
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		DataOutputStream dos = new DataOutputStream(baos);
+		
+		try {
+			dos.writeInt(0x2e736e64);		//magic number ".snd"
+			dos.writeInt(24);				//data offset
+			dos.writeInt(0xffffffff);		//data size (-1 unknown)
+			dos.writeInt(3);				//data format
+			dos.writeInt(8000);				//sample rate
+			dos.writeInt(1);				//channels
+						
+			double[] samples = tone(800, 0.1, 1.0, 8000);
+			for(int i=0; i<samples.length; i++) {
+				dos.writeShort((short)(Short.MAX_VALUE*samples[i]));
+			}
+			
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return new ByteArrayInputStream(baos.toByteArray());
+	}
+	
+	private static double[] tone(double hz, double duration, double amplitude, int sampleRate) {
+		
+        int N = (int)(sampleRate * duration);
+        double[] a = new double[N+1];
+        for (int i = 0; i <= N; i++)
+            a[i] = amplitude * Math.sin(2 * Math.PI * i * hz / sampleRate);
+        return a;
+    }
+	
 }
