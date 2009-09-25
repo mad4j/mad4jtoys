@@ -72,6 +72,7 @@
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.event.KeyEvent;
 import java.awt.image.BufferStrategy;
@@ -80,7 +81,6 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 
 import javax.swing.JFrame;
@@ -124,6 +124,9 @@ public class G extends JFrame {
 	private static final int MAX_ROCKS = 65;
 	private static final int MAX_FACES = 20;
 
+	private static final int SAMPLE_RATE = 16000;
+	
+	
 	private boolean key[] = new boolean[65535];
 	private boolean keyLock[] = new boolean[65535];
 
@@ -177,27 +180,27 @@ public class G extends JFrame {
 
 		tiles[TILE_GOBLIN_PLAY] = new BufferedImage(TILE_SIZE, TILE_SIZE,
 				BufferedImage.TYPE_INT_ARGB);
-		drawSprite(tiles[TILE_GOBLIN_PLAY].createGraphics(), Color.green
+		drawSprite(tiles[TILE_GOBLIN_PLAY], Color.green
 				.darker(), new int[] { 126, 219, 219, 255, 165, 90, 90, 165 });
 
 		tiles[TILE_GOBLIN_CRASH] = new BufferedImage(TILE_SIZE, TILE_SIZE,
 				BufferedImage.TYPE_INT_ARGB);
-		drawSprite(tiles[TILE_GOBLIN_CRASH].createGraphics(), Color.red
+		drawSprite(tiles[TILE_GOBLIN_CRASH], Color.red
 				.darker(), new int[] { 170, 85, 170, 85, 126, 219, 255, 189 });
 
 		tiles[TILE_ROCK] = new BufferedImage(TILE_SIZE, TILE_SIZE,
 				BufferedImage.TYPE_INT_ARGB);
-		drawSprite(tiles[TILE_ROCK].createGraphics(), Color.orange, new int[] {
+		drawSprite(tiles[TILE_ROCK], Color.orange, new int[] {
 				170, 85, 170, 85, 170, 85, 170, 85 });
 
 		tiles[TILE_FACE_SAD] = new BufferedImage(TILE_SIZE, TILE_SIZE,
 				BufferedImage.TYPE_INT_ARGB);
-		drawSprite(tiles[TILE_FACE_SAD].createGraphics(), Color.black,
+		drawSprite(tiles[TILE_FACE_SAD], Color.black,
 				new int[] { 60, 66, 165, 129, 153, 165, 66, 60 });
 
 		tiles[TILE_FACE_HAPPY] = new BufferedImage(TILE_SIZE, TILE_SIZE,
 				BufferedImage.TYPE_INT_ARGB);
-		drawSprite(tiles[TILE_FACE_HAPPY].createGraphics(), Color.black,
+		drawSprite(tiles[TILE_FACE_HAPPY], Color.black,
 				new int[] { 60, 66, 165, 129, 165, 153, 66, 60 });
 
 		// TODO : Scenery
@@ -450,8 +453,10 @@ public class G extends JFrame {
 
 	}
 
-	public static void drawSprite(Graphics2D g, Color color, int[] values) {
+	public static void drawSprite(BufferedImage image, Color color, int[] values) {
 
+		Graphics g = image.getGraphics();
+		
 		g.setColor(color);
 
 		for (int i = 0; i < 8; i++) {
@@ -476,30 +481,32 @@ public class G extends JFrame {
 			dos.writeInt(24); // data offset
 			dos.writeInt(0xffffffff); // data size (-1 unknown)
 			dos.writeInt(3); // data format
-			dos.writeInt(16000); // sample rate
+			dos.writeInt(SAMPLE_RATE); // sample rate
 			dos.writeInt(1); // channels
 
-			double[] samples = tone(800, 0.08, 0.5, 16000);
+			double[] samples = tone(800, 0.08);
 			for (int i = 0; i < samples.length; i++) {
-				dos.writeShort((short) (Short.MAX_VALUE * samples[i]));
+				dos.writeShort((short)(Short.MAX_VALUE * samples[i]));
 			}
 
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		} catch (Exception e) {
+			
 		}
 
 		return new ByteArrayInputStream(baos.toByteArray());
 	}
 
-	private static double[] tone(double hz, double duration, double amplitude,
-			int sampleRate) {
+	private static double[] tone(double hertz, double duration) {
 
-		int N = (int) (sampleRate * duration);
-		double[] a = new double[N + 1];
-		for (int i = 0; i <= N; i++)
-			a[i] = amplitude * Math.sin(2 * Math.PI * i * hz / sampleRate);
-		return a;
+		int N = (int)(SAMPLE_RATE * duration);
+		double[] samples = new double[N + 1];
+
+		for (int i = 0; i <= N; i++) {
+			//amplitude = 0.5
+			samples[i] = 0.5 * Math.sin(2 * Math.PI * i * hertz / SAMPLE_RATE);
+		}
+		
+		return samples;
 	}
 
 }
