@@ -73,7 +73,6 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
-import java.awt.Graphics2D;
 import java.awt.event.KeyEvent;
 import java.awt.image.BufferStrategy;
 import java.awt.image.BufferedImage;
@@ -106,18 +105,20 @@ public class G extends JFrame {
 	private static final int BOARD_WIDTH = 32;
 	private static final int BOARD_HEIGHT = 24;
 
-	private static final int PIXEL_SIZE = 3;
+	private static final int PIXEL_SIZE = 2;
 	private static final int TILE_SIZE = 8 * PIXEL_SIZE;
 
 	private static final int GAMEFILED_WIDTH = BOARD_WIDTH * TILE_SIZE;
 	private static final int GAMEFILED_HEIGHT = BOARD_HEIGHT * TILE_SIZE;
 
 	private static final int TILE_NOTHING = -1;
-	private static final int TILE_ROCK = 0;
-	private static final int TILE_FACE_SAD = 1;
-	private static final int TILE_FACE_HAPPY = 2;
-	private static final int TILE_GOBLIN_PLAY = 3;
-	private static final int TILE_GOBLIN_CRASH = 4;
+	
+	private static final int TILE_GOBLIN_PLAY = 0;
+	private static final int TILE_GOBLIN_CRASH = 1;	
+	private static final int TILE_ROCK = 2;
+	private static final int TILE_FACE_SAD = 3;
+	private static final int TILE_FACE_HAPPY = 4;
+	
 
 	private static final int MAX_TILES = 5;
 
@@ -125,6 +126,25 @@ public class G extends JFrame {
 	private static final int MAX_FACES = 20;
 
 	private static final int SAMPLE_RATE = 16000;
+
+	private static final int[][] SPRITES_DATA =  {
+		
+		//Color: dark green
+		{ 0xff00b200, 126, 219, 219, 255, 165, 90, 90, 165 },
+		
+		//Color: red
+		{ 0xffff0000, 170, 85, 170, 85, 126, 219, 255, 189 },
+		
+		//Color: dark orange
+		{ 0xffb28c00, 170, 85, 170, 85, 170, 85, 170, 85 },
+		
+		//Color: magenta
+		{ 0xffff00ff, 60, 66, 165, 129, 153, 165, 66, 60 },
+		
+		//Color: magenta
+		{ 0xffff00ff, 60, 66, 165, 129, 165, 153, 66, 60 }		
+	};
+	
 	
 	
 	private boolean key[] = new boolean[65535];
@@ -133,6 +153,7 @@ public class G extends JFrame {
 	// private InputStream tone1;
 
 	public static void main(String[] args) {
+		
 		new G();
 	}
 
@@ -156,6 +177,8 @@ public class G extends JFrame {
 
 		int playerX = 0;
 		int playerY = 0;
+		
+		int c;
 
 		int[][] board = new int[BOARD_WIDTH][BOARD_HEIGHT];
 
@@ -174,34 +197,29 @@ public class G extends JFrame {
 		 * GLOBAL INITIALIZATION
 		 *************************************************************/
 
-		Graphics2D g;
+		Graphics g;
 
-		BufferedImage[] tiles = new BufferedImage[MAX_TILES];
+		BufferedImage[] tiles = new BufferedImage[MAX_TILES];		
+		
+		for(c=0; c<MAX_TILES; c++) {
+			tiles[c] = new BufferedImage(TILE_SIZE, TILE_SIZE,
+					BufferedImage.TYPE_INT_ARGB);
+			
+			g = tiles[c].getGraphics();
+			g.setColor(new Color(SPRITES_DATA[c][0]));
 
-		tiles[TILE_GOBLIN_PLAY] = new BufferedImage(TILE_SIZE, TILE_SIZE,
-				BufferedImage.TYPE_INT_ARGB);
-		drawSprite(tiles[TILE_GOBLIN_PLAY], Color.green
-				.darker(), new int[] { 126, 219, 219, 255, 165, 90, 90, 165 });
+			for (y = 0; y < 8; y++) {
+				for (x = 0; x < 8; x++) {
 
-		tiles[TILE_GOBLIN_CRASH] = new BufferedImage(TILE_SIZE, TILE_SIZE,
-				BufferedImage.TYPE_INT_ARGB);
-		drawSprite(tiles[TILE_GOBLIN_CRASH], Color.red
-				.darker(), new int[] { 170, 85, 170, 85, 126, 219, 255, 189 });
+					if ((SPRITES_DATA[c][y+1] & 1 << x) != 0) {
 
-		tiles[TILE_ROCK] = new BufferedImage(TILE_SIZE, TILE_SIZE,
-				BufferedImage.TYPE_INT_ARGB);
-		drawSprite(tiles[TILE_ROCK], Color.orange, new int[] {
-				170, 85, 170, 85, 170, 85, 170, 85 });
-
-		tiles[TILE_FACE_SAD] = new BufferedImage(TILE_SIZE, TILE_SIZE,
-				BufferedImage.TYPE_INT_ARGB);
-		drawSprite(tiles[TILE_FACE_SAD], Color.black,
-				new int[] { 60, 66, 165, 129, 153, 165, 66, 60 });
-
-		tiles[TILE_FACE_HAPPY] = new BufferedImage(TILE_SIZE, TILE_SIZE,
-				BufferedImage.TYPE_INT_ARGB);
-		drawSprite(tiles[TILE_FACE_HAPPY], Color.black,
-				new int[] { 60, 66, 165, 129, 165, 153, 66, 60 });
+						g.fillRect(x * PIXEL_SIZE, y * PIXEL_SIZE, PIXEL_SIZE,
+								PIXEL_SIZE);
+					}
+				}
+			}			
+		}
+		
 
 		// TODO : Scenery
 		BufferedImage scenery = new BufferedImage(GAMEFILED_WIDTH,
@@ -240,9 +258,10 @@ public class G extends JFrame {
 				facesCount = 0;
 				rocksCount = 0;
 
-				level++;
-				playerSpeed -= 2;
-				if (playerSpeed < 0) {
+				level++;				
+				
+				playerSpeed -=2;
+				if(playerSpeed < 0) {
 					playerSpeed = 0;
 				}
 
@@ -336,7 +355,7 @@ public class G extends JFrame {
 					score -= 5;
 					if (score < 0) {
 						score = 0;
-					}
+					}					
 				}
 				if (playerX < 0) {
 
@@ -353,7 +372,7 @@ public class G extends JFrame {
 
 					score += 100;
 
-					AudioPlayer.player.start(createSample());
+					AudioPlayer.player.start(createSample(800, 0.08));
 
 					if (facesCount == 0) {
 						gameState = STATE_LEVEL_INIT;
@@ -389,18 +408,20 @@ public class G extends JFrame {
 			/******************************************************************
 			 * SCREEN UPDATE
 			 ******************************************************************/
-			g = (Graphics2D) strategy.getDrawGraphics();
+			g = strategy.getDrawGraphics();
 			g.translate(getInsets().left, getInsets().top);
 			g.drawImage(scenery, 0, 0, null);
 
 			// draw items
-			for (x = 0; x < BOARD_WIDTH; x++) {
-				for (y = 0; y < BOARD_HEIGHT; y++) {
-
-					if (board[x][y] != TILE_NOTHING) {
-
-						g.drawImage(tiles[board[x][y]], x * TILE_SIZE, y
-								* TILE_SIZE, null);
+			
+			if(gameState != STATE_NEW_GAME) {
+				for (x = 0; x < BOARD_WIDTH; x++) {
+					for (y = 0; y < BOARD_HEIGHT; y++) {
+						
+						if (board[x][y] != TILE_NOTHING) {
+							
+							g.drawImage(tiles[board[x][y]], x*TILE_SIZE, y*TILE_SIZE, null);
+						}
 					}
 				}
 			}
@@ -438,7 +459,7 @@ public class G extends JFrame {
 			// TODO: what happen if sleep parameter is negative??
 			try {
 				Thread.sleep((nextFrameStart - System.nanoTime()) / 1000000);
-			} catch (Throwable t) {
+			} catch (Exception e) {
 			}
 		}
 	}
@@ -450,63 +471,35 @@ public class G extends JFrame {
 		if (e.getID() == KeyEvent.KEY_RELEASED) {
 			keyLock[e.getKeyCode()] = false;
 		}
-
 	}
 
-	public static void drawSprite(BufferedImage image, Color color, int[] values) {
 
-		Graphics g = image.getGraphics();
-		
-		g.setColor(color);
-
-		for (int i = 0; i < 8; i++) {
-			for (int j = 0; j < 8; j++) {
-
-				if ((values[i] & 1 << j) != 0) {
-
-					g.fillRect(j * PIXEL_SIZE, i * PIXEL_SIZE, PIXEL_SIZE,
-							PIXEL_SIZE);
-				}
-			}
-		}
-	}
-
-	private static final InputStream createSample() {
+	private static final InputStream createSample(double hertz, double duration) {
 
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		DataOutputStream dos = new DataOutputStream(baos);
 
 		try {
+			
 			dos.writeInt(0x2e736e64); // magic number ".snd"
 			dos.writeInt(24); // data offset
-			dos.writeInt(0xffffffff); // data size (-1 unknown)
+			dos.writeInt(-1); // data size (-1 unknown)
 			dos.writeInt(3); // data format
 			dos.writeInt(SAMPLE_RATE); // sample rate
 			dos.writeInt(1); // channels
-
-			double[] samples = tone(800, 0.08);
-			for (int i = 0; i < samples.length; i++) {
-				dos.writeShort((short)(Short.MAX_VALUE * samples[i]));
+			
+			int N = (int)(SAMPLE_RATE * duration);
+			for (int i = 0; i <= N; i++) {
+				//amplitude = 0.5
+				double sample = 0.5 * Math.sin(2 * Math.PI * i * hertz / SAMPLE_RATE);
+				dos.writeShort((short)(Short.MAX_VALUE * sample));
 			}
-
+			
 		} catch (Exception e) {
 			
 		}
 
 		return new ByteArrayInputStream(baos.toByteArray());
-	}
-
-	private static double[] tone(double hertz, double duration) {
-
-		int N = (int)(SAMPLE_RATE * duration);
-		double[] samples = new double[N + 1];
-
-		for (int i = 0; i <= N; i++) {
-			//amplitude = 0.5
-			samples[i] = 0.5 * Math.sin(2 * Math.PI * i * hertz / SAMPLE_RATE);
-		}
-		
-		return samples;
 	}
 
 }
