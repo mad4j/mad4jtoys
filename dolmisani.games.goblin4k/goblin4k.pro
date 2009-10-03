@@ -4,7 +4,10 @@
 -libraryjars 'C:\Programmi\Java\jre6\lib\rt.jar'
 
 -dontskipnonpubliclibraryclasses
--target 1.6
+-optimizationpasses 2
+-allowaccessmodification
+-overloadaggressively
+-dontusemixedcaseclassnames
 
 
 # Keep - Applications. Keep all application classes, along with their 'main'
@@ -27,11 +30,6 @@
 # along with the special 'createUI' method.
 -keep class * extends javax.swing.plaf.ComponentUI {
     public static javax.swing.plaf.ComponentUI createUI(javax.swing.JComponent);
-}
-
-# Keep names - Native method names. Keep all native class/method names.
--keepclasseswithmembers,allowshrinking class * {
-    native <methods>;
 }
 
 # Remove - System method calls. Remove all invocations of System
