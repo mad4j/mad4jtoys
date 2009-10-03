@@ -21,52 +21,52 @@
 /*
  * Original Code
  * --------------------------------------------------------------------------
- * 90 REM**COMPUTE JULY**
- * 100 PRINT"{CLR}":POKE52,28:POKE56,28:CLR:POKE36869,255:POKE36879,26
- * 110 IFS>HSTHENHS=S
- * 115 RESTORE:B=230:Z=8152:Z1=Z+30720:W=0:S=J:G=0
- * 120 FORX=1TO32:READA:POKEX+7167,A:NEXT:FORX=1TO8:READA:POKEX+7423,A:NEXT
- * 130 PRINT"{CLR}{RVS ON}{GRN}{RIGHT}{RIGHT}{RIGHT}{RIGHT}{RIGHT}G O B L I N"
- * 140 PRINT"{HOME}{RED}{DOWN}{DOWN}"SPC(12)"{RVS ON}HS="HS:PRINT"{HOME}{RVS ON}{BLK}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}O=LEFT{RIGHT}{RIGHT}{RIGHT}{RIGHT}{RIGHT}{RIGHT}{RIGHT}{RIGHT}{RIGHT}P=RIGHT"
- * 150 FORI=1TO65
+ * 90 REM **COMPUTE JULY**
+ * 100 PRINT "{CLR}" : POKE 52,28 : POKE 56,28 : CLR : POKE 36869,255 : POKE 36879,26
+ * 110 IF S>HS THEN HS=S
+ * 115 RESTORE : B=230 : Z=8152 : Z1=Z+30720 : W=0 : S=J : G=0
+ * 120 FOR X=1 TO 32 : READ A : POKE X+7167,A : NEXT : FOR X=1 TO8 : READ A : POKE X+7423,A : NEXT
+ * 130 PRINT "{CLR}{RVS ON}{GRN}{RIGHT}{RIGHT}{RIGHT}{RIGHT}{RIGHT}G O B L I N"
+ * 140 PRINT "{HOME}{RED}{DOWN}{DOWN}"SPC(12)"{RVS ON}HS="HS : PRINT"{HOME}{RVS ON}{BLK}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}O=LEFT{RIGHT}{RIGHT}{RIGHT}{RIGHT}{RIGHT}{RIGHT}{RIGHT}{RIGHT}{RIGHT}P=RIGHT"
+ * 150 FOR I=1 TO 65
  * 160 X=INT(RND(1)*330)+7746
- * 170 IFPEEK(X)=BTHEN160
- * 180 POKEX,B:POKEX+30720,0:NEXTI
- * 190 FORI=1TO20
+ * 170 IF PEEK(X)=B THEN 160
+ * 180 POKE X,B : POKE X+30720,0 : NEXT I
+ * 190 FOR I=1 TO 20
  * 200 X=INT(RND(1)*330)+7746
- * 210 IFPEEK(X)=BORPEEK(X)=1ORPEEK(X)=3THEN200
- * 220 IFPEEK(X+21)=BANDPEEK(X+22)=BANDPEEK(X+23)=BTHENPOKEX,3:POKEX+30720,0:G=G+1:GOTO240
- * 230 POKEX,1:POKEX+30720,0
- * 240 NEXTI
- * 250 POKEZ,32:Z=Z-22:Z1=Z1-22:IFZ<7746THENZ=Z+374:Z1=Z1+374
- * 260 GETA$:IFA$="O"THENZ=Z-1:Z1=Z1-1
- * 270 IFA$="P"THENZ=Z+1:Z1=Z1+1
- * 280 IFPEEK(Z)=BTHEN410
- * 290 IFPEEK(Z)=1THENGOSUB330
- * 300 POKEZ,0:POKEZ1,0:FORT=1TO220:NEXT
- * 310 IFW=20-GTHENJ=S:GOSUB350:GOTO110
- * 320 GOTO250
+ * 210 IF PEEK(X)=B OR PEEK(X)=1 OR PEEK(X)=3 THEN 200
+ * 220 IF PEEK(X+21)=B AND PEEK(X+22)=B AND PEEK(X+23)=B THEN POKE X,3 : POKE X+30720,0 : G=G+1 : GOTO 240
+ * 230 POKE X,1 : POKE X+30720,0
+ * 240 NEXT I
+ * 250 POKE Z,32 : Z=Z-22 : Z1=Z1-22 : IF Z<7746 THEN Z=Z+374 : Z1=Z1+374
+ * 260 GET A$ : IF A$="O" THEN Z=Z-1 : Z1=Z1-1
+ * 270 IF A$="P" THEN Z=Z+1 : Z1=Z1+1
+ * 280 IF PEEK(Z)=B THEN 410
+ * 290 IF PEEK(Z)=1 THEN GOSUB 330
+ * 300 POKE Z,0 : POKE Z1,0 : FOR T=1 TO 220 : NEXT
+ * 310 IF W=20-G THEN J=S : GOSUB350 : GOTO110
+ * 320 GOTO 250
  * 330 W=W+1:S=S+25:PRINT"{HOME}{BLU}{DOWN}{DOWN}{RVS ON}"S:POKE36878,15
- * 340 FORT=235TO250:POKE36876,T:NEXT:POKE36876,0:RETURN
+ * 340 FOR T=235 TO 250 : POKE 36876,T : NEXT : POKE 36876,0 : RETURN
  * 350 PRINT"{HOME}{RED}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{RVS ON}******ALL RIGHT!******"
- * 355 FORI=1TO10:GETA$:NEXTI:REM COLLECT GARBAGE
- * 360 FORI=1TO25
+ * 355 FOR I=1 TO 10 : GET A$ : NEXT I : REM COLLECT GARBAGE
+ * 360 FOR I=1 TO 25
  * 370 X=INT(RND(1)*15)+233
- * 380 POKE36878,15:POKE36875,X
- * 390 FORT=1TO30:NEXTT:NEXTI
- * 400 POKE36878,0:POKE36875,0:RETURN
- * 410 POKE36877,200:FORV=15TO0STEP-1:POKE36878,V:NEXT:POKE36877,0:POKEZ,2
- * 420 FORX=7746TO8075:IFPEEK(X)<>1THENNEXTX
- * 430 IFPEEK(X)=1THENPOKEX,3:NEXTX
+ * 380 POKE 36878,15 : POKE 36875,X
+ * 390 FOR T=1 TO 30 : NEXT T : NEXT I
+ * 400 POKE 36878,0 : POKE 36875,0 : RETURN
+ * 410 POKE 36877,200 : FOR V=15 TO 0 STEP-1 : POKE 36878,V : NEXT : POKE 36877,0 : POKE Z,2
+ * 420 FOR X=7746 TO 8075: IF PEEK(X)<>1 THEN NEXT X
+ * 430 IF PEEK(X)=1 THEN POKE X,3 : NEXT X
  * 440 J=0
- * 445 FORI=1TO10:GETC$:NEXTI
- * 450 PRINT"{HOME}{BLU}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{RIGHT}{RVS ON}PLAY AGAIN ? (Y/N)"
- * 465 GETC$:IFC$=""THEN465
- * 470 IFC$="Y"THEN110
- * 490 POKE36869,240:POKE36879,27:POKE52,30:POKE56,30:PRINT"{CLR}SEE YA!"
- * 500 DATA126,219,219,255,165,90,90,165,60,66,165,129,153,165,66,60
- * 510 DATA170,85,170,85,126,219,255,189,60,66,165,129,165,153,66,60
- * 520 DATA0,0,0,0,0,0,0,0
+ * 445 FOR I=1 TO 10 : GET C$ : NEXT I
+ * 450 PRINT "{HOME}{BLU}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{DOWN}{RIGHT}{RVS ON}PLAY AGAIN ? (Y/N)"
+ * 465 GET C$ : IF C$="" THEN 465
+ * 470 IF C$="Y" THEN 110
+ * 490 POKE 36869,240 : POKE 36879,27 : POKE 52,30 : POKE 56,30 : PRINT"{CLR}SEE YA!"
+ * 500 DATA 126,219,219,255,165,90,90,165,60,66,165,129,153,165,66,60
+ * 510 DATA 170,85,170,85,126,219,255,189,60,66,165,129,165,153,66,60
+ * 520 DATA 0,0,0,0,0,0,0,0
  */
 
 import java.awt.Color;
@@ -82,6 +82,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.InputStream;
 
+import javax.swing.JEditorPane;
 import javax.swing.JFrame;
 
 import sun.audio.AudioPlayer;
@@ -152,12 +153,12 @@ public class G extends JFrame {
 
 	// private InputStream tone1;
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws Exception {
 		
 		new G();
 	}
 
-	public G() {
+	public G() throws Exception {
 
 		super("Goblin4k");
 
@@ -213,8 +214,7 @@ public class G extends JFrame {
 
 					if ((SPRITES_DATA[c][y+1] & 1 << x) != 0) {
 
-						g.fillRect(x * PIXEL_SIZE, y * PIXEL_SIZE, PIXEL_SIZE,
-								PIXEL_SIZE);
+						g.fillRect(x*PIXEL_SIZE, y*PIXEL_SIZE, PIXEL_SIZE, PIXEL_SIZE);
 					}
 				}
 			}			
@@ -240,7 +240,7 @@ public class G extends JFrame {
 		setVisible(true);
 
 		long nextFrameStart = System.nanoTime();
-		while (true) {
+		while(true) {
 
 			stepCounter++;
 			nextFrameStart += 16666667;
@@ -328,7 +328,6 @@ public class G extends JFrame {
 						}
 					}
 				}
-
 			}
 
 			if (gameState == STATE_PLAYING) {
@@ -372,7 +371,7 @@ public class G extends JFrame {
 
 					score += 100;
 
-					AudioPlayer.player.start(createSample(800, 0.08));
+					AudioPlayer.player.start(createSample(1100, 0.08));
 
 					if (facesCount == 0) {
 						gameState = STATE_LEVEL_INIT;
@@ -382,6 +381,9 @@ public class G extends JFrame {
 				if (board[playerX][playerY] == TILE_ROCK) {
 
 					gameState = STATE_GAME_OVER;
+					
+					
+					AudioPlayer.player.start(createCrashSound());
 				}
 			}
 
@@ -431,6 +433,12 @@ public class G extends JFrame {
 					level, facesCount, score, bestScore));
 
 			if (gameState == STATE_NEW_GAME) {
+								
+				JEditorPane titlePane = new JEditorPane("text/html", "<font name=arial size=6 color=red><b>Goblin4k</b></font><br>a 4 Kb remake from Daniele Olmisani (daniele.olmisani@gmail.com)");
+				
+				titlePane.setSize(getWidth(), getHeight());
+				titlePane.paint(g);
+				
 				g.setColor(new Color(0xBBABCDEF, true));
 				g.fillRect(0, (int) (getHeight() * 0.7), getWidth(), 30);
 				g.setColor(Color.BLACK);
@@ -456,11 +464,7 @@ public class G extends JFrame {
 			strategy.show();
 
 			// Suspend until the next frame
-			// TODO: what happen if sleep parameter is negative??
-			try {
-				Thread.sleep((nextFrameStart - System.nanoTime()) / 1000000);
-			} catch (Exception e) {
-			}
+			Thread.sleep(Math.max(0, nextFrameStart - System.nanoTime()) / 1000000);
 		}
 	}
 
@@ -474,32 +478,53 @@ public class G extends JFrame {
 	}
 
 
-	private static final InputStream createSample(double hertz, double duration) {
+	private static final InputStream createSample(double hertz, double duration) throws Exception {
 
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		DataOutputStream dos = new DataOutputStream(baos);
-
-		try {
-			
-			dos.writeInt(0x2e736e64); // magic number ".snd"
-			dos.writeInt(24); // data offset
-			dos.writeInt(-1); // data size (-1 unknown)
-			dos.writeInt(3); // data format
-			dos.writeInt(SAMPLE_RATE); // sample rate
-			dos.writeInt(1); // channels
-			
-			int N = (int)(SAMPLE_RATE * duration);
-			for (int i = 0; i <= N; i++) {
-				//amplitude = 0.5
-				double sample = 0.5 * Math.sin(2 * Math.PI * i * hertz / SAMPLE_RATE);
-				dos.writeShort((short)(Short.MAX_VALUE * sample));
-			}
-			
-		} catch (Exception e) {
-			
+		
+		dos.writeInt(0x2e736e64); // magic number ".snd"
+		dos.writeInt(24); // data offset
+		dos.writeInt(-1); // data size (-1 unknown)
+		dos.writeInt(3); // data format
+		dos.writeInt(SAMPLE_RATE); // sample rate
+		dos.writeInt(1); // channels
+		
+		int N = (int)(SAMPLE_RATE * duration);
+		for (int i = 0; i <= N; i++) {
+			//amplitude = 0.5
+			double sample = 0.5 * Math.sin(2 * Math.PI * i * hertz / SAMPLE_RATE);
+			dos.writeShort((short)(Short.MAX_VALUE * sample));
 		}
 
 		return new ByteArrayInputStream(baos.toByteArray());
+	}
+	
+	private static final InputStream createCrashSound() throws Exception {
+		
+		
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		DataOutputStream dos = new DataOutputStream(baos);
+		
+		dos.writeInt(0x2e736e64); // magic number ".snd"
+		dos.writeInt(24); // data offset
+		dos.writeInt(-1); // data size (-1 unknown)
+		dos.writeInt(3); // data format
+		dos.writeInt(SAMPLE_RATE); // sample rate
+		dos.writeInt(1); // channels
+		
+		int N = (int)(SAMPLE_RATE * 0.03);
+		//double amplitude = 1.0;
+		
+		for (int i = 0; i <= N; i++) {
+			//amplitude = 0.5
+			double sample = 0.5 * 2.0 * (Math.random() -0.5);
+			dos.writeShort((short)(Short.MAX_VALUE * sample));
+		}
+
+		return new ByteArrayInputStream(baos.toByteArray());
+		
+		
 	}
 
 }

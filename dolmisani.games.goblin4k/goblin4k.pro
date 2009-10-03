@@ -1,5 +1,5 @@
 -injars goblin4k-un.jar
--outjars goblin4k.jar
+-outjars goblin4k-ob.jar
 
 -libraryjars 'C:\Programmi\Java\jre6\lib\rt.jar'
 
