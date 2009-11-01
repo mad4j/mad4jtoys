@@ -96,21 +96,25 @@ import sun.audio.AudioPlayer;
 @SuppressWarnings("serial")
 public class G extends JFrame {
 
+	// Game states
 	private static final int STATE_NEW_GAME = 0;
 	private static final int STATE_PLAYING = 1;
 	private static final int STATE_GAME_OVER = 2;
 	private static final int STATE_LEVEL_INIT = 3;
 	private static final int STATE_LEVEL_BUILD = 4;
 
+	// Game board size
 	private static final int BOARD_WIDTH = 32;
 	private static final int BOARD_HEIGHT = 24;
 
+	// Game graphics dimensions
 	private static final int PIXEL_SIZE = 2;
 	private static final int TILE_SIZE = 8 * PIXEL_SIZE;
-
 	private static final int GAMEFIELD_WIDTH = BOARD_WIDTH * TILE_SIZE;
 	private static final int GAMEFIELD_HEIGHT = BOARD_HEIGHT * TILE_SIZE;
 
+	
+	// Game tiles
 	private static final int TILE_NOTHING = -1;
 	
 	private static final int TILE_GOBLIN_PLAY = 0;
@@ -119,14 +123,7 @@ public class G extends JFrame {
 	private static final int TILE_FACE_SAD = 3;
 	private static final int TILE_FACE_HAPPY = 4;
 	
-
 	private static final int MAX_TILES = 5;
-
-	private static final int MAX_ROCKS = 65;
-	private static final int MAX_FACES = 20;
-
-	private static final int SAMPLE_RATE = 16000;
-	private static final double AUDIO_VOLUME = 0.3;
 
 	private static final int[][] SPRITES_DATA =  {
 		
@@ -145,9 +142,17 @@ public class G extends JFrame {
 		//Color: blue
 		{ 0xff0000ff, 60, 66, 165, 129, 165, 153, 66, 60 }		
 	};
-	
+
+		
+	//Number of elements on the board
+	private static final int MAX_ROCKS = 65;
+	private static final int MAX_FACES = 20;
 
 	
+	//Audio engine parameters
+	private static final int SAMPLE_RATE = 16000;
+	private static final double AUDIO_VOLUME = 0.3;
+
 	private static final String AUDIO_HEADER = "\u2e73\u6e64\0\u0018\uffff\uffff\0\u0003\0\u3e80\0\u0001";
 
 
