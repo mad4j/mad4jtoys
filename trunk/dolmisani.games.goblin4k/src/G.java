@@ -69,20 +69,19 @@
  * 520 DATA 0,0,0,0,0,0,0,0
  */
 
+import java.applet.Applet;
+import java.awt.AWTEvent;
 import java.awt.Color;
-import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.event.KeyEvent;
-import java.awt.image.BufferStrategy;
 import java.awt.image.BufferedImage;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
 import java.io.InputStream;
 
 import javax.swing.JEditorPane;
-import javax.swing.JFrame;
 
 import sun.audio.AudioPlayer;
 
@@ -94,7 +93,7 @@ import sun.audio.AudioPlayer;
  * 
  */
 @SuppressWarnings("serial")
-public class G extends JFrame {
+public class G extends Applet implements Runnable {
 
 	// Game states
 	private static final int STATE_NEW_GAME = 0;
@@ -110,74 +109,57 @@ public class G extends JFrame {
 	// Game graphics dimensions
 	private static final int PIXEL_SIZE = 2;
 	private static final int TILE_SIZE = 8 * PIXEL_SIZE;
-	private static final int GAMEFIELD_WIDTH = BOARD_WIDTH * TILE_SIZE;
-	private static final int GAMEFIELD_HEIGHT = BOARD_HEIGHT * TILE_SIZE;
-
 	
+	private static final int STATUS_LINE_HEIGHT = 18;
+	private static final int GAMEFIELD_WIDTH = BOARD_WIDTH * TILE_SIZE;
+	private static final int GAMEFIELD_HEIGHT = BOARD_HEIGHT * TILE_SIZE + STATUS_LINE_HEIGHT;
+
 	// Game tiles
 	private static final int TILE_NOTHING = -1;
-	
+
 	private static final int TILE_GOBLIN_PLAY = 0;
-	private static final int TILE_GOBLIN_CRASH = 1;	
+	private static final int TILE_GOBLIN_CRASH = 1;
 	private static final int TILE_ROCK = 2;
 	private static final int TILE_FACE_SAD = 3;
 	private static final int TILE_FACE_HAPPY = 4;
-	
+
 	private static final int MAX_TILES = 5;
 
-	private static final int[][] SPRITES_DATA =  {
-		
-		//Color: dark green
-		{ 0xff00b200, 126, 219, 219, 255, 165, 90, 90, 165 },
-		
-		//Color: red
-		{ 0xffff0000, 170, 85, 170, 85, 126, 219, 255, 189 },
-		
-		//Color: dark orange
-		{ 0xffb28c00, 170, 85, 170, 85, 170, 85, 170, 85 },
-		
-		//Color: blue
-		{ 0xff0000ff, 60, 66, 165, 129, 153, 165, 66, 60 },
-		
-		//Color: blue
-		{ 0xff0000ff, 60, 66, 165, 129, 165, 153, 66, 60 }		
-	};
+	private static final int[][] SPRITES_DATA = {
 
-		
-	//Number of elements on the board
+			// Color: dark green
+			{ 0xff00b200, 126, 219, 219, 255, 165, 90, 90, 165 },
+
+			// Color: red
+			{ 0xffff0000, 170, 85, 170, 85, 126, 219, 255, 189 },
+
+			// Color: dark orange
+			{ 0xffb28c00, 170, 85, 170, 85, 170, 85, 170, 85 },
+
+			// Color: blue
+			{ 0xff0000ff, 60, 66, 165, 129, 153, 165, 66, 60 },
+
+			// Color: blue
+			{ 0xff0000ff, 60, 66, 165, 129, 165, 153, 66, 60 } };
+
+	// Number of elements on the board
 	private static final int MAX_ROCKS = 65;
 	private static final int MAX_FACES = 20;
 
-	
-	//Audio engine parameters
+	// Audio engine parameters
 	private static final int SAMPLE_RATE = 16000;
 	private static final double AUDIO_VOLUME = 0.3;
-
-	private static final String AUDIO_HEADER = "\u2e73\u6e64\0\u0018\uffff\uffff\0\u0003\0\u3e80\0\u0001";
-
-
-/*	
-	dos.writeInt(0x2e736e64); // magic number ".snd"
-	dos.writeInt(24); // data offset
-	dos.writeInt(-1); // data size (-1 unknown)
-	dos.writeInt(3); // data format
-	dos.writeInt(SAMPLE_RATE); // sample rate
-	dos.writeInt(1); // channels
-*/	
 	
 	private boolean key[] = new boolean[65535];
 	private boolean keyLock[] = new boolean[65535];
 
-	// private InputStream tone1;
-
-	public static void main(String[] args) throws Exception {
-		
-		new G();
+	public void start() {
+		enableEvents(AWTEvent.KEY_EVENT_MASK | AWTEvent.MOUSE_EVENT_MASK
+				| AWTEvent.MOUSE_MOTION_EVENT_MASK);
+		new Thread(this).start();
 	}
 
-	public G() throws Exception {
-
-		super("Goblin4k");
+	public void run() {
 
 		int x = 0;
 		int y = 0;
@@ -194,48 +176,49 @@ public class G extends JFrame {
 
 		int playerX = 0;
 		int playerY = 0;
-		
+
 		int counter;
 
+		String message;
+		
 		int[][] board = new int[BOARD_WIDTH][BOARD_HEIGHT];
 
-		// set the window size
-		getContentPane().setPreferredSize(
-				new Dimension(GAMEFIELD_WIDTH, GAMEFIELD_HEIGHT));
-		setResizable(false);
-		pack();
-
-		// put the window at the center of the screen
-		setLocationRelativeTo(null);
-
-		setDefaultCloseOperation(EXIT_ON_CLOSE);
-
+		/*
+		 * // set the window size getContentPane().setPreferredSize( new
+		 * Dimension(GAMEFIELD_WIDTH, GAMEFIELD_HEIGHT)); setResizable(false);
+		 * pack();
+		 * 
+		 * // put the window at the center of the screen
+		 * setLocationRelativeTo(null);
+		 * 
+		 * setDefaultCloseOperation(EXIT_ON_CLOSE);
+		 */
 		/*************************************************************
 		 * GLOBAL INITIALIZATION
 		 *************************************************************/
 
 		Graphics g;
 
-		BufferedImage[] tiles = new BufferedImage[MAX_TILES];		
-		
-		for(counter=0; counter<MAX_TILES; counter++) {
+		BufferedImage[] tiles = new BufferedImage[MAX_TILES];
+
+		for (counter = 0; counter < MAX_TILES; counter++) {
 			tiles[counter] = new BufferedImage(TILE_SIZE, TILE_SIZE,
 					BufferedImage.TYPE_INT_ARGB);
-			
+
 			g = tiles[counter].getGraphics();
 			g.setColor(new Color(SPRITES_DATA[counter][0]));
 
 			for (y = 0; y < 8; y++) {
 				for (x = 0; x < 8; x++) {
 
-					if ((SPRITES_DATA[counter][y+1] & 1 << x) != 0) {
+					if ((SPRITES_DATA[counter][y + 1] & 1 << x) != 0) {
 
-						g.fillRect(x*PIXEL_SIZE, y*PIXEL_SIZE, PIXEL_SIZE, PIXEL_SIZE);
+						g.fillRect(x * PIXEL_SIZE, y * PIXEL_SIZE, PIXEL_SIZE,
+								PIXEL_SIZE);
 					}
 				}
-			}			
+			}
 		}
-		
 
 		// TODO : Scenery
 		BufferedImage scenery = new BufferedImage(GAMEFIELD_WIDTH,
@@ -247,16 +230,15 @@ public class G extends JFrame {
 		g.fillRect(0, 0, GAMEFIELD_WIDTH, GAMEFIELD_HEIGHT);
 
 		enableEvents(8 | 16 | 32);
-
-		createBufferStrategy(2);
-		BufferStrategy strategy = getBufferStrategy();
-
-		// ok now on screen
-		setIconImage(tiles[TILE_GOBLIN_PLAY]);
-		setVisible(true);
-
+		/*
+		 * createBufferStrategy(2); BufferStrategy strategy =
+		 * getBufferStrategy();
+		 * 
+		 * // ok now on screen setIconImage(tiles[TILE_GOBLIN_PLAY]);
+		 * setVisible(true);
+		 */
 		long nextFrameStart = System.nanoTime();
-		while(true) {
+		while (true) {
 
 			stepCounter++;
 			nextFrameStart += 16666667;
@@ -274,10 +256,10 @@ public class G extends JFrame {
 				facesCount = 0;
 				counter = 0;
 
-				level++;				
-				
-				playerSpeed -=2;
-				if(playerSpeed < 0) {
+				level++;
+
+				playerSpeed -= 2;
+				if (playerSpeed < 0) {
 					playerSpeed = 0;
 				}
 
@@ -295,8 +277,8 @@ public class G extends JFrame {
 				if (counter < MAX_ROCKS) {
 
 					do {
-						x = (int)(Math.random() * BOARD_WIDTH);
-						y = (int)(Math.random() * BOARD_HEIGHT - 1);
+						x = (int) (Math.random() * BOARD_WIDTH);
+						y = (int) (Math.random() * BOARD_HEIGHT - 1);
 					} while (board[x][y] != TILE_NOTHING);
 					board[x][y] = TILE_ROCK;
 					counter++;
@@ -305,8 +287,8 @@ public class G extends JFrame {
 				if (facesCount < MAX_FACES) {
 
 					do {
-						x = (int)(Math.random() * BOARD_WIDTH);
-						y = (int)(Math.random() * BOARD_HEIGHT - 1);
+						x = (int) (Math.random() * BOARD_WIDTH);
+						y = (int) (Math.random() * BOARD_HEIGHT - 1);
 					} while (board[x][y] != TILE_NOTHING);
 					board[x][y] = TILE_FACE_SAD;
 					facesCount++;
@@ -369,7 +351,7 @@ public class G extends JFrame {
 					score -= 5;
 					if (score < 0) {
 						score = 0;
-					}					
+					}
 				}
 				if (playerX < 0) {
 
@@ -396,7 +378,7 @@ public class G extends JFrame {
 				if (board[playerX][playerY] == TILE_ROCK) {
 
 					gameState = STATE_GAME_OVER;
-										
+
 					AudioPlayer.player.start(createCrashSound());
 				}
 			}
@@ -424,42 +406,64 @@ public class G extends JFrame {
 			/******************************************************************
 			 * SCREEN UPDATE
 			 ******************************************************************/
-			g = strategy.getDrawGraphics();
+			// g = strategy.getDrawGraphics();
+
+			g.setColor(Color.WHITE);
+			g.fillRect(0, 0, getWidth(), getHeight());
 			g.translate(getInsets().left, getInsets().top);
-			g.drawImage(scenery, 0, 0, null);
 
 			// draw items
-			
-			if(gameState != STATE_NEW_GAME) {
+
+			if (gameState != STATE_NEW_GAME) {
 				for (x = 0; x < BOARD_WIDTH; x++) {
 					for (y = 0; y < BOARD_HEIGHT; y++) {
-						
+
 						if (board[x][y] != TILE_NOTHING) {
-							
-							g.drawImage(tiles[board[x][y]], x*TILE_SIZE, y*TILE_SIZE, null);
+
+							g.drawImage(tiles[board[x][y]], x * TILE_SIZE, y
+									* TILE_SIZE, null);
 						}
 					}
 				}
 			}
 
-			setTitle(String.format(
-					"Goblin4k -- Level: %02d(%02d faces) Score: %06d / %06d ",
-					level, facesCount, score, bestScore));
-
+			/*
+			 * setTitle(String.format(
+			 * "Goblin4k -- Level: %02d(%02d faces) Score: %06d / %06d ", level,
+			 * facesCount, score, bestScore));
+			 */
+			
+			g.setColor(Color.BLACK);
+			g.fillRect(0, GAMEFIELD_HEIGHT - STATUS_LINE_HEIGHT-2, GAMEFIELD_WIDTH, 1);
+			
+			g.setColor(Color.RED);
+			g.setFont(new Font("sansserif", Font.BOLD | Font.ITALIC, STATUS_LINE_HEIGHT));
+			g.drawString("Goblin4k" , 2, GAMEFIELD_HEIGHT);
+			
+			message = String.format(
+					 "Level: %02d(%02d faces) Score: %06d / %06d ", level,
+					 facesCount, score, bestScore);
+			g.setColor(Color.BLACK);
+			g.setFont(new Font("sansserif", Font.BOLD, STATUS_LINE_HEIGHT-4));
+			g.drawString(message, GAMEFIELD_WIDTH-g.getFontMetrics()
+					.stringWidth(message)-2, GAMEFIELD_HEIGHT);
+			
 			if (gameState == STATE_NEW_GAME) {
-								
-				JEditorPane titlePane = new JEditorPane("text/html", "<font face=arial><font size=7 color=red><b>Goblin<i>4k</i></b></font><br><hr noshade color=red><br><font color=blue>a 4 Kb remake from Daniele Olmisani (daniele.olmisani@gmail.com)</font></font>");
-				
+
+				JEditorPane titlePane = new JEditorPane(
+						"text/html",
+						"<font face=arial><font size=7 color=red><b>Goblin<i>4k</i></b></font><br><hr noshade color=red><br><font color=blue>a 4 Kb remake from Daniele Olmisani (daniele.olmisani@gmail.com)</font></font>");
+
 				titlePane.setSize(getWidth(), getHeight());
 				titlePane.paint(g);
-				
+
 				g.setColor(new Color(0xBBABCDEF, true));
 				g.fillRect(0, (int) (getHeight() * 0.7), getWidth(), 30);
 				g.setColor(Color.BLACK);
-				String msg = "Goblin4k - Press ENTER to start";
-				g.setFont(new Font("sansserif", Font.BOLD, 14));
-				g.drawString(msg, (GAMEFIELD_WIDTH - g.getFontMetrics()
-						.stringWidth(msg)) / 2, (int) (getHeight() * 0.7) + 14
+				message = "Goblin4k - Press ENTER to start";
+				g.setFont(new Font("sansserif", Font.BOLD, STATUS_LINE_HEIGHT));
+				g.drawString(message, (GAMEFIELD_WIDTH - g.getFontMetrics()
+						.stringWidth(message)) / 2, (int) (getHeight() * 0.7) + 14
 						+ (30 - 14) / 2);
 			}
 
@@ -475,10 +479,15 @@ public class G extends JFrame {
 						+ (30 - 14) / 2);
 			}
 
-			strategy.show();
+			getGraphics().drawImage(scenery, 0, 0, null);
 
 			// Suspend until the next frame
-			Thread.sleep(Math.max(0, nextFrameStart - System.nanoTime()) / 1000000);
+			try {
+				Thread
+						.sleep(Math.max(0, nextFrameStart - System.nanoTime()) / 1000000);
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+			}
 		}
 	}
 
@@ -491,46 +500,67 @@ public class G extends JFrame {
 		}
 	}
 
-
-	private static final InputStream createSample(double hertz, double duration) throws Exception {
+	private static final InputStream createSample(double hertz, double duration) {
 
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		
-		baos.write(AUDIO_HEADER.getBytes("UTF-16BE"));
-		
-		int N = (int)(SAMPLE_RATE * duration);
-		for (int i = 0; i <= N; i++) {
-			//dos.writeShort((short)(Short.MAX_VALUE * (AUDIO_VOLUME * Math.sin(2 * Math.PI * i * hertz / SAMPLE_RATE))));
-			
-			
-			short s = (short)(Short.MAX_VALUE * (AUDIO_VOLUME * Math.sin(2 * Math.PI * i * hertz / SAMPLE_RATE)));
-			baos.write((s&0xff00)>>8);
-			baos.write(s&0xff);
-	
-			hertz += 1;
+		DataOutputStream dos = new DataOutputStream(baos);
+
+		try {
+			dos.writeInt(0x2e736e64); // magic number ".snd"
+			dos.writeInt(24); // data offset
+			dos.writeInt(-1); // data size (-1 unknown)
+			dos.writeInt(3); // data format
+			dos.writeInt(SAMPLE_RATE); // sample rate
+			dos.writeInt(1); // channels
+
+			int N = (int) (SAMPLE_RATE * duration);
+			for (int i = 0; i <= N; i++) {
+				// dos.writeShort((short)(Short.MAX_VALUE * (AUDIO_VOLUME *
+				// Math.sin(2 * Math.PI * i * hertz / SAMPLE_RATE))));
+
+				short s = (short) (Short.MAX_VALUE * (AUDIO_VOLUME * Math.sin(2
+						* Math.PI * i * hertz / SAMPLE_RATE)));
+				baos.write((s & 0xff00) >> 8);
+				baos.write(s & 0xff);
+
+				hertz += 1;
+			}
+
+		} catch (Exception e) {
+
 		}
-		
+
 		return new ByteArrayInputStream(baos.toByteArray());
 	}
-	
-	private static final InputStream createCrashSound() throws Exception {
-		
-		
+
+	private static final InputStream createCrashSound() {
+
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		
-		baos.write(AUDIO_HEADER.getBytes("UTF-16BE"));
-		
-		int N = (int)(SAMPLE_RATE * 0.03);
-		
-		for (int i = 0; i <=N; i++) {
-			
-			short s = (short)(Short.MAX_VALUE * (AUDIO_VOLUME * 2.0 * (Math.random()-0.5)));
-			
-			baos.write((s&0xff00)>>8);
-			baos.write(s&0xff);
+		DataOutputStream dos = new DataOutputStream(baos);
+
+		try {
+			dos.writeInt(0x2e736e64); // magic number ".snd"
+			dos.writeInt(24); // data offset
+			dos.writeInt(-1); // data size (-1 unknown)
+			dos.writeInt(3); // data format
+			dos.writeInt(SAMPLE_RATE); // sample rate
+			dos.writeInt(1); // channels
+
+			int N = (int) (SAMPLE_RATE * 0.03);
+
+			for (int i = 0; i <= N; i++) {
+
+				short s = (short) (Short.MAX_VALUE * (AUDIO_VOLUME * 2.0 * (Math
+						.random() - 0.5)));
+
+				dos.writeShort(s);
+			}
+
+		} catch (Exception e) {
+
 		}
 
-		return new ByteArrayInputStream(baos.toByteArray());		
+		return new ByteArrayInputStream(baos.toByteArray());
 	}
 
 }
